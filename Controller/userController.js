@@ -15,7 +15,7 @@ module.exports = {
       logintype,
       token,
     } = req.body;
-
+console.log("HIt",req.body)
     if (!logintype) {
       try {
         if (!email || !username) {
