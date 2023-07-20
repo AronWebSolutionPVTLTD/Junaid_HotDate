@@ -15,6 +15,9 @@ app.use(express.json());
 app.use(cors())
 app.use("/api", userroutes,model,event,clubroutes);
 db();
+app.get("/",(req,res)=>{
+console.log("HELLO WORLD")
+}
 app.listen(PORT, () => {
   console.log(`Connected to port ${PORT}`);
 });
