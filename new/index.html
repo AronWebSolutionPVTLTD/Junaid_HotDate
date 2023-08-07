@@ -1,0 +1,62 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Application</title>
+</head>
+<body>
+  <h1>Public Chat</h1>
+  <div id="publicChat"></div>
+  <input type="text" id="publicMessage" />
+  <button onclick="sendPublicMessage()">Send</button>
+
+  <h1>Private Chat</h1>
+  <div id="privateChat"></div>
+  <input type="text" id="privateMessage" />
+  <input type="text" id="recipientUsername" placeholder="Recipient Username" />
+  <button onclick="sendPrivateMessage()">Send</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const publicChatDiv = document.getElementById('publicChat');
+    const privateChatDiv = document.getElementById('privateChat');
+    const publicMessageInput = document.getElementById('publicMessage');
+    const privateMessageInput = document.getElementById('privateMessage');
+    const recipientUsernameInput = document.getElementById('recipientUsername');
+
+    const socket = io('http://localhost:5000/');
+
+    // Function to display messages on the page
+    function displayMessage(message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.textContent = `${message.sender}: ${message.content}`;
+      if (message.type === 'private') {
+        messageDiv.style.color = 'blue';
+      }
+      publicChatDiv.appendChild(messageDiv);
+    }
+
+    // Function to send a public message
+    function sendPublicMessage() {
+      const message = publicMessageInput.value;
+      socket.emit('message', { type: 'public', sender: 'User', content: message });
+      publicMessageInput.value = '';
+    }
+
+    // Function to send a private message
+    function sendPrivateMessage() {
+      const message = privateMessageInput.value;
+      const recipient = recipientUsernameInput.value;
+      socket.emit('message', { type: 'private', sender: 'User', content: message, recipient });
+      privateMessageInput.value = '';
+    }
+
+    // Listen for messages from the server
+    socket.on('message', (data) => {
+      displayMessage(data);
+    });
+  </script>
+</body>
+</html>
