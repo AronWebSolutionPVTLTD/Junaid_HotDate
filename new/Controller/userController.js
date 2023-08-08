@@ -146,7 +146,7 @@ console.log("dsfj")
         .select("-password");
       let image = null;
       if (req.file) {
-        image = "https://hotdate.onrender.com/" + req.file.filename;
+        image = "https://hotdate.onrender.com/uploads/" + req.file.filename;
       } else {
         image = get.image;
       }
