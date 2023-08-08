@@ -61,7 +61,8 @@ console.log("dsfj")
           const token = jwt.sign({ userId: exist._id }, SECRET_KEY, {
             expiresIn: "30d",
           });
-  
+          exist.token=token;
+  exist.save();
           return res.status(200).send({ statusCode: 200, Message: token });
         }else{
 
@@ -77,7 +78,8 @@ console.log("dsfj")
         const token = jwt.sign({ userId: data._id }, SECRET_KEY, {
           expiresIn: "30d",
         });
-
+        data.token=token;
+        data.save();
 
      
         if (!data) {
