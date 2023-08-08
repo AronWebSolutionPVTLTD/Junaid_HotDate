@@ -126,7 +126,7 @@ console.log("HIt",req.body)
       const tokenUser = req.decode;
       const get = await userModel
         .findOne({ _id: tokenUser._id })
-        .select("username image location");
+        .select("-password");
       let image = null;
       if (req.file) {
         image = req.file.filename;
