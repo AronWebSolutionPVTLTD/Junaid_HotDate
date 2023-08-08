@@ -16,7 +16,7 @@ module.exports = {
       logintype,
       token,
     } = req.body;
-
+console.log("dsfj")
     if (!logintype) {
       try {
         if (!email || !username) {
@@ -55,24 +55,40 @@ module.exports = {
       }
     } else {
       try {
+
         const exist = await userModel.findOne({ email });
         if (exist) {
-          return res.status(200).send("User already exists");
-        }
+          const token = jwt.sign({ userId: exist._id }, SECRET_KEY, {
+            expiresIn: "30d",
+          });
+  
+          return res.status(200).send({ statusCode: 200, Message: token });
+        }else{
+
+
         const data = await userModel.create({
           email: email,
           username: username,
-          logintype: logintype,
-          token: token,
+          logintype: logintype
         });
+        
+        console.log(data)
+       
+        const token = jwt.sign({ userId: data._id }, SECRET_KEY, {
+          expiresIn: "30d",
+        });
+
+
+     
         if (!data) {
           return res.status(400).send("Failed to create user");
         } else {
           res
             .status(201)
-            .send({ statusCode: 201, Message: "User Created Successfully" });
-        }
+            .send({ statusCode: 201, Message: token });
+        }}
       } catch (error) {
+        console.log(error )
         return res.status(500).send(error);
       }
     }
