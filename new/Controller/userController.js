@@ -62,7 +62,7 @@ console.log("dsfj")
             expiresIn: "30d",
           });
           exist.token=token;
-  exist.save();
+          exist.save();
           return res.status(200).send({ statusCode: 200, Message: token });
         }else{
 

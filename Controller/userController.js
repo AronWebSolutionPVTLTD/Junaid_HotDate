@@ -15,7 +15,7 @@ module.exports = {
       logintype,
       token,
     } = req.body;
-console.log("HIt",req.body)
+
     if (!logintype) {
       try {
         if (!email || !username) {
@@ -54,22 +54,22 @@ console.log("HIt",req.body)
       }
     } else {
       try {
-        const exist = await userModel.findOne({ email });
-        if (exist) {
-          return res.status(200).send("User already exists");
-        }
         const data = await userModel.create({
           email: email,
           username: username,
-          logintype: logintype,
-          token: token,
+          logintype: logintype
         });
+
+        const token = jwt.sign({ userId: data._id }, SECRET_KEY, {
+          expiresIn: "30d",
+        });
+console.log(token,data)
         if (!data) {
           return res.status(400).send("Failed to create user");
         } else {
           res
             .status(201)
-            .send({ statusCode: 201, Message: "User Created Successfully" });
+            .send({ statusCode: 201, Message: token });
         }
       } catch (error) {
         return res.status(500).send(error);
