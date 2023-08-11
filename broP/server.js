@@ -17,7 +17,12 @@ const message = require("./Routes/message")
 const travel = require("./Routes/travel")
 const faq = require("./Routes/faq")
 app.use(express.json())
-app.use(cors());
+const corsOptions = {
+    origin: 'https://hot-date.vercel.app/',
+    credentials: true,
+    optionSuccessStatus: 200
+}
+app.use(cors(corsOptions));
 app.use("/api", userroutes, model, event, travel, clubroutes, message,faq);
 db();
 app.use(express.static(path.join(__dirname)));
