@@ -22,7 +22,7 @@ const corsOptions = {
     credentials: true,
     optionSuccessStatus: 200
 }
-app.use(cors());
+app.use(cors(corsOptions));
 app.use("/api", userroutes, model, event, travel, clubroutes, message,faq);
 db();
 app.use(express.static(path.join(__dirname)));
