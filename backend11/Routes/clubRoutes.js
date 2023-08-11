@@ -3,7 +3,11 @@ const club = require("../Controller/clubController");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const {verifyToken}= require("../helper/middleware")
+const {
+  verifyToken,
+  verifyAdmin,
+  verifyUser,
+} = require("../helper/middleware");
 // Define the upload file path
 const uploadFilePath = path.resolve(__dirname, "../", "public/uploads");
 // Set up multer storage configuration
@@ -15,8 +19,6 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
-
-// Define the file filter logic
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/jpeg" ||
@@ -26,7 +28,9 @@ const fileFilter = (req, file, cb) => {
     cb(null, true);
   } else {
     cb(
-      new Error("Invalid file type. Only JPEG, PNG, and MP4/MKV files are allowed."),
+      new Error(
+        "Invalid file type. Only JPEG, PNG, and MP4/MKV files are allowed."
+      ),
       false
     );
   }
@@ -35,26 +39,26 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.post(
   "/create_club",
-  verifyToken, upload.fields([
+  upload.fields([
     { name: "image", maxCount: 1000 * 1000 },
     { name: "video", maxCount: 1000 * 1000 },
   ]),
   club.create_club
 );
-
-router.delete("/delete_club",verifyToken, club.delete_club);
-
+router.post("/club_verify/:clubId", verifyAdmin, club.club_verify);
+router.delete("/delete_club/:clubId", verifyToken, club.delete_club);
 router.put(
-  "/update_club",
-  verifyToken, upload.fields([
-    { name: "mainImage", maxCount:1},
+  "/update_club/:clubId",
+  verifyToken,
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
     { name: "image", maxCount: 1000 * 1000 },
     { name: "video", maxCount: 1000 * 1000 },
   ]),
   club.update_club
 );
-router.get("/search_club",club.search_club)
-router.get("/getClub/:id",club.getClub)
-router.put("/bookingClub/:cludId",verifyToken,club.bookingClub)
+router.get("/search_club", club.search_club);
+router.get("/getClub/:id", club.getClub);
+router.put("/bookingClub/:cludId", verifyToken, club.bookingClub);
 
 module.exports = router;

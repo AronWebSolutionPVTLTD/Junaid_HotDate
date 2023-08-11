@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const eventController = require("../Controller/event");
-const { verifyToken } = require("../helper/middleware");
+const {
+  verifyToken,
+  verifyAdmin,
+  verifyUser,
+} = require("../helper/middleware");
 
 const multer = require("multer");
 const path = require("path");
@@ -16,7 +20,6 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
-
 // Define the file filter logic
 const fileFilter = (req, file, cb) => {
   if (
@@ -38,7 +41,6 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.post(
   "/createEvent",
-  verifyToken,
   upload.fields([
     { name: "images", maxCount: 1000 * 100 * 10 },
     { name: "videos", maxCount: 1000 * 100 * 10 },
@@ -48,7 +50,7 @@ router.post(
 router.get("/events", eventController.find);
 router.get("/get_event/:id", eventController.get_event);
 router.put(
-  "/update_event",
+  "/update_event/:eventId",
   verifyToken,
   upload.fields([
     { name: "mainImage", maxCount: 1 },
@@ -57,7 +59,11 @@ router.put(
   ]),
   eventController.update_event
 );
-router.delete("/delete_event/:id", verifyToken, eventController.delete_event);
+router.delete(
+  "/delete_event/:eventId",
+  verifyToken,
+  eventController.delete_event
+);
 router.post(
   "/events/:eventId/participants",
   verifyToken,

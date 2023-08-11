@@ -9,6 +9,7 @@ const eventSchema = new mongoose.Schema({
   description: { type: String, required: true },
   images: [{ type: String, required: true }],
   videos: [{ type: String, required: true }],
+  accepted_type: [{ type: String }],
   type: {
     type: String,
     enm: ["Private Place", "Public Place", "Virtual Date"],

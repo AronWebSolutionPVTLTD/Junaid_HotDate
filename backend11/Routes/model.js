@@ -3,7 +3,12 @@ const router = express.Router();
 const modelController = require("../Controller/model");
 const multer = require("multer");
 const path = require("path");
-const { verifyToken } = require("../helper/middleware");
+const {
+  verifyToken,
+  verifyAdmin,
+  verifyUser,
+  verifyModel,
+} = require("../helper/middleware");
 // Define the upload file path
 const uploadFilePath = path.resolve(__dirname, "../", "public/uploads");
 // Set up multer storage configuration
@@ -44,34 +49,21 @@ router.post(
   ]),
   modelController.addModel
 );
-router.get("/getModel/:id", modelController.getModel);
 router.get("/models", modelController.find);
 router.put(
-  "/update_model",
-  verifyToken,
-  upload.fields([
-    { name: "images", maxCount: 1000 * 100 * 10 },
-    { name: "mainImage", maxCount: 1 },
-    { name: "videos", maxCount: 1000 * 100 * 10 },
-  ]),
-  modelController.update
+  "/update_wallet/:modelId",
+  verifyUser,
+  modelController.update_wallet
 );
-router.delete("/delete_model/:id", verifyToken, modelController.delete);
-router.post(
-  "/:modelId/follow_request",
-  verifyToken,
-  modelController.follow_request
-);
-router.post(
-  "/:modelId/:followerId/update_follow_request",
-  verifyToken,
-  modelController.update_follow_request
-);
-router.put("/update_wallet", verifyToken, modelController.update_wallet);
-
 router.put(
   "/booking_model/:modelId",
-  verifyToken,
+  verifyUser,
   modelController.booking_model
 );
+router.put(
+  "/is_modelverify/:modelId",
+  verifyAdmin,
+  modelController.is_modelverify
+);
+router.get("/isLive", modelController.isLive);
 module.exports = router;

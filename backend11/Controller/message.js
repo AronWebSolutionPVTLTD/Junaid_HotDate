@@ -9,18 +9,17 @@ module.exports = {
             if (!content) {
                 return res.status(400).send('Please provide  content for public chat messages.');
             }
-
             let attachement = []
             if (req.files) {
                 req.files.forEach(file => {
                     console.log(file.path)
-                    var att = 'http://localhost:5000/images/' + file.path
+                    var att = process.env.Backend_URL_Image + file.path
                     attachement.push(att)
                 })
             }
             const message = new Message({
                 type: 'public',
-                sender: req.decode._id,
+                sender: req.user._id,
                 attachement: attachement,
                 content: content,
             });
@@ -41,19 +40,18 @@ module.exports = {
             if (req.files) {
                 req.files.forEach(file => {
                     console.log(file.path)
-                    var att = 'http://localhost:5000/images/' + file.path
+                    var att = process.env.Backend_URL_Image + file.path
                     attachement.push(att)
                 })
             }
             // Validate sender and receiver as valid MongoDB ObjectIds
             const isValidObjectId = mongoose.Types.ObjectId.isValid;
-            if (!isValidObjectId(req.decode._id) || !isValidObjectId(receiver)) {
+            if (!isValidObjectId(req.user._id) || !isValidObjectId(receiver)) {
                 return res.status(400).send('Invalid sender or receiver.');
             }
-
             const message = new Message({
                 type: 'private',
-                sender: req.decode._id,
+                sender: req.user._id,
                 attachement: attachement,
                 receiver: receiver,
                 content: content,
@@ -71,7 +69,7 @@ module.exports = {
         try {
             const { type } = req.query
             if (type == "private") {
-                const get = await Message.find({ type: 'private', receiver: req.decode._id }).populate("sender","image").select("sender content attachement createdAt")
+                const get = await Message.find({ type: 'private', receiver: req.user._id }).populate("sender","image").select("sender content attachement createdAt")
                 return res.status(200).send(get)
             } else {
                 const get = await Message.find({ type: 'public' }).populate("sender","image").select("sender content attachement createdAt")

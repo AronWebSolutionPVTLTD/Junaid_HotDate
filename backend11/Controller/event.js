@@ -1,24 +1,21 @@
 const eventModel = require("../Model/event");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
+const nodemailer = require("nodemailer");
 module.exports = {
   async createEvent(req, res) {
     try {
-      const { eventName, date, location, description, type } = req.body;
-      if ((!eventName, !date, !location, !description, !type)) {
+      const { eventName, date, accepted_type, location, description, type } =
+        req.body;
+      if ((!eventName, !accepted_type, !date, !location, !description, !type)) {
         return res.status(400).send("Required data is missing.");
       }
       let images = [];
       let videos = [];
-
-      // Check if images were uploaded
       if (req.files["images"]) {
         for (const image of req.files["images"]) {
           images.push(`${process.env.Backend_URL_Image}${image.filename}`);
         }
       }
-
-      // Check if videos were uploaded
       if (req.files["videos"]) {
         for (const video of req.files["videos"]) {
           videos.push(`${process.env.Backend_URL_Image}${video.filename}`);
@@ -28,12 +25,34 @@ module.exports = {
         ...req.body,
         images: images,
         videos: videos,
-        userId: req.decode._id,
+        userId: req.body.userId,
       });
       if (!data) {
         return res.status(400).send("something went wrong");
       } else {
-        return res.status(200).send(data);
+        let transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.Nodemailer_id,
+            pass: process.env.Nodemailer_pass,
+          },
+        });
+        const mailOptions = {
+          from: data.userId.email,
+          to: process.env.Admin_email,
+          subject: "New Event Created",
+          html: `<h4>
+          Dear Admin,
+          A new event request has been submitted for approval. The event name is ${eventName}.
+          Please review the request and take appropriate action..
+          Best regards,
+          The Event Management Team</h4>`,
+        };
+        console.log("Notification email sent to admin");
+        transporter.sendMail(mailOptions);
+        return res
+          .status(201)
+          .json({ message: "Event request submitted for approval." });
       }
     } catch (e) {
       console.log(e);
@@ -42,7 +61,7 @@ module.exports = {
   },
   async find(req, res) {
     try {
-      const { limit, q, page } = req.query;
+      const { q } = req.query;
       const data = await eventModel.find();
       const total = await eventModel.count();
       console.log(total, "total");
@@ -50,6 +69,7 @@ module.exports = {
         let result = await eventModel.find({
           $or: [
             { eventName: { $regex: q, $options: "i" } },
+            { type: { $regex: q, $options: "i" } },
             { location: { $regex: q, $options: "i" } },
           ],
         });
@@ -66,9 +86,11 @@ module.exports = {
   async get_event(req, res) {
     try {
       const { id } = req.params;
+      console.log(id);
       const data = await eventModel
         .findOne({ _id: id })
         .populate("userId", " image username");
+
       if (!data) {
         return res.status(400).send("something went wrong");
       } else {
@@ -81,7 +103,7 @@ module.exports = {
   },
   async update_event(req, res) {
     try {
-      const { eventId } = req.body;
+      const { eventId } = req.params;
       if (!eventId) {
         return res.status(404).send("required the eventId");
       }
@@ -89,6 +111,7 @@ module.exports = {
       if (!exist) {
         return res.status(404).send("event not found");
       }
+      console.log(exist);
       let images = exist.images;
       if (req.files["images"] && req.files["images"].length > 0) {
         const newImages = req.files["images"].map((image) => image.filename);
@@ -140,15 +163,15 @@ module.exports = {
   },
   async delete_event(req, res) {
     try {
-      const { id } = req.params;
-      if (!id) {
+      const { eventId } = req.params;
+      if (!eventId) {
         return res.status(404).send("required the eventId");
       }
-      const exist = await eventModel.findOne({ _id: id });
+      const exist = await eventModel.findOne({ _id: eventId });
       if (!exist) {
         return res.status(404).send("event not found");
       }
-      const data = await eventModel.findByIdAndDelete({ _id: id });
+      const data = await eventModel.findByIdAndDelete({ _id: eventId });
       if (!data) {
         return res.status(400).send("something went wrong");
       } else {
@@ -159,128 +182,145 @@ module.exports = {
       return res.status(500).send(e);
     }
   },
-  async requestParticipant(req, res) {
-    const { eventId } = req.params;
+  async requestParticipant(req, res, next) {
     try {
+      console.log(req.user);
+      console.log(req.user._id, "Now");
+      const { eventId } = req.params;
+      console.log("Event ID:", eventId);
       const event = await eventModel.findById(eventId);
+      console.log("Event:", event);
       if (!event) {
-        return res.status(404).json({ error: "Event not found" });
+        return res.status(404).send("Event not found");
       }
-      const participantIndex = event.participants.findIndex(
-        (p) => p.user.toString() === req.decode._id
+      const userIdString =
+        req.user && req.user._id ? req.user._id.toString() : null;
+      console.log("UserID String:", userIdString);
+      const participantExists = event.participants.find(
+        (participant) =>
+          participant.user && participant.user.toString() === userIdString
       );
-      if (participantIndex !== -1) {
-        return res.status(400).json({ error: "Participant already added" });
+      console.log("Participant Exists:", participantExists);
+      if (participantExists) {
+        return res.status(400).send("Participant already added");
       }
-      event.participants.push({ user: req.decode._id });
+      event.participants.push({ user: req.user._id });
       await event.save();
-      res
-        .status(200)
-        .json({ message: "Participant request sent successfully" });
+      res.status(200).send("Participant request sent successfully");
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      return next(error);
     }
   },
-  async updateParticipantStatus(req, res) {
+  async updateParticipantStatus(req, res, next) {
     const { eventId, participantId } = req.params;
     const { status } = req.body;
     try {
       // Find the event by ID
       const event = await eventModel.findById(eventId);
       if (!event) {
-        return res.status(404).json({ error: "Event not found" });
+        return res.status(404).send("Event not found");
       }
       const participant = event.participants.find(
         (p) => p._id.toString() === participantId
       );
+      // console.log(participant)
       if (!participant) {
-        return res.status(404).json({ error: "Participant not found" });
+        return res.status(404).send("Participant not found");
       }
-      participant.status = status;
-      await event.save();
-      return res
-        .status(200)
-        .json({ message: "Participant status updated successfully" });
+      if (status == "Rejected") {
+        const data = await eventModel.findOneAndUpdate(
+          { _id: eventId, participants: [{ _id: participantId }] },
+          { $pull: { participants: { _id: participantId } } }
+        );
+        if (!data) {
+          return res.status(400).send("something went wrong");
+        }
+        return res.status(200).send("Rejected  request");
+      } else if (status == "Approved") {
+        participant.status = "Approved";
+        await event.save();
+        return res.status(200).send("Approved  request");
+      }
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ error: "Internal server error" });
+      return next();
     }
   },
-  //   async promote(req, res) {
-  //     try {
-  //       const eventId = req.params.eventId;
-
-  //       // Perform any necessary validation and authorization checks here
-  //       // ...
-
-  //       // Retrieve the event from the database
-  //       const event = await eventModel.findById(eventId);
-  //       if (!event) {
-  //         return res.status(404).json({ error: "Event not found" });
-  //       }
-
-  //       // Check if the event is already promoted
-  //       if (event.isPromoted) {
-  //         return res.status(400).json({ error: "Event is already promoted" });
-  //       }
-
-  //       // Process the payment and update the event document
-  //       // ... (Payment processing logic goes here)
-
-  //       // Update the event as promoted
-  //       event.isPromoted = true;
-  //       await event.save();
-
-  //       // Return a success response
-  //       return res.status(200).json({ message: "Event successfully promoted" });
-  //     } catch (error) {
-  //       console.error(error);
-  //       return res.status(500).json({ error: "Internal server error" });
-  //     }
-  //   }
-
-  // async promote(req, res) {
-  //     try {
-  //         const eventId = req.params.eventId;
-
-  //         // Retrieve the event from the database
-  //         const event = await eventModel.findById(eventId);
-  //         if (!event) {
-  //             return res.status(404).json({ error: "Event not found" });
-  //         }
-  //         // Check if the event is already promoted
-  //         if (event.isPromoted) {
-  //             return res.status(400).json({ error: "Event is already promoted" });
-  //         }
-
-  //         // Process the payment using the Stripe SDK
-  //         const paymentIntent = await stripe.paymentIntents.create({
-  //             amount: 1000, // Amount in cents, adjust according to your pricing
-  //             currency: "usd", // Currency code
-  //             payment_method: req.body.paymentMethodId,
-  //             description: "Event promotion payment for Event XYZ", // Additional payment description
-  //             metadata: {
-  //                 eventId: eventId, // Additional metadata about the event
-  //                 userId: "64ae7a78fd24fceaf4cd831d", // Additional metadata about the user
-  //             },
-  //         });
-
-  //         // Handle the payment response, update the event if successful
-  //         if (paymentIntent.status === "succeeded") {
-  //             // Update the event as promoted
-  //             event.isPromoted = true;
-  //             await event.save();
-  //             if (paymentIntent) {
-  //                 return res.status(200).json({ message: "Event successfully promoted" });
-  //             }
-  //         } else {
-  //             console.error(paymentIntent); // Log the payment error for debugging
-  //             return res.status(500).json({ error: "Payment failed" });
-  //         }
-  //     } catch (error) {
-  //         console.error(error);
-  //         return res.status(500).json({ error: "Internal server error" });
-  //     }
-  // }
 };
+
+//   async promote(req, res) {
+//     try {
+//       const eventId = req.params.eventId;
+//       // Perform any necessary validation and authorization checks here
+//       // ...
+
+//       // Retrieve the event from the database
+//       const event = await eventModel.findById(eventId);
+//       if (!event) {
+//         return res.status(404).json({ error: "Event not found" });
+//       }
+
+//       // Check if the event is already promoted
+//       if (event.isPromoted) {
+//         return res.status(400).json({ error: "Event is already promoted" });
+//       }
+
+//       // Process the payment and update the event document
+//       // ... (Payment processing logic goes here)
+
+//       // Update the event as promoted
+//       event.isPromoted = true;
+//       await event.save();
+
+//       // Return a success response
+//       return res.status(200).json({ message: "Event successfully promoted" });
+//     } catch (error) {
+//       console.error(error);
+//       return res.status(500).json({ error: "Internal server error" });
+//     }
+//   }
+
+// async promote(req, res) {
+//     try {
+//         const eventId = req.params.eventId;
+
+//         // Retrieve the event from the database
+//         const event = await eventModel.findById(eventId);
+//         if (!event) {
+//             return res.status(404).json({ error: "Event not found" });
+//         }
+//         // Check if the event is already promoted
+//         if (event.isPromoted) {
+//             return res.status(400).json({ error: "Event is already promoted" });
+//         }
+
+//         // Process the payment using the Stripe SDK
+//         const paymentIntent = await stripe.paymentIntents.create({
+//             amount: 1000, // Amount in cents, adjust according to your pricing
+//             currency: "usd", // Currency code
+//             payment_method: req.body.paymentMethodId,
+//             description: "Event promotion payment for Event XYZ", // Additional payment description
+//             metadata: {
+//                 eventId: eventId, // Additional metadata about the event
+//                 userId: "64ae7a78fd24fceaf4cd831d", // Additional metadata about the user
+//             },
+//         });
+
+//         // Handle the payment response, update the event if successful
+//         if (paymentIntent.status === "succeeded") {
+//             // Update the event as promoted
+//             event.isPromoted = true;
+//             await event.save();
+//             if (paymentIntent) {
+//                 return res.status(200).json({ message: "Event successfully promoted" });
+//             }
+//         } else {
+//             console.error(paymentIntent); // Log the payment error for debugging
+//             return res.status(500).json({ error: "Payment failed" });
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }

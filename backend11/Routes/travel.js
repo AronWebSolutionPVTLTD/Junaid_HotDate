@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router();
 const travelController = require("../Controller/travel")
-const { verifyToken } = require("../helper/middleware")
+const { verifyToken,verifyAdmin,verifyUser } = require("../helper/middleware")
 const multer = require("multer");
 const path = require("path");
 const uploadFilePath = path.resolve(__dirname, "../", "public/uploads");
@@ -21,12 +21,9 @@ const upload = multer({
     fileSize: 1024 * 1024 * 5,
   },
 });
-router.post("/createTravle", verifyToken, upload.single("image"), travelController.createtravel)
+router.post("/createTravle", upload.single("image"), travelController.createtravel)
 router.get("/search_travel", travelController.search_travel)
 router.get("/travel/:id", travelController.findOne)
 router.put("/update_travel", verifyToken, upload.single("image"), travelController.update_travel)
 router.delete("/delete_travel/:travelId", verifyToken, travelController.delete_travel)
 module.exports = router
-
-
-

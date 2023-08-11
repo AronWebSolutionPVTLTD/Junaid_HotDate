@@ -3,8 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
-const model = require("../Model/model");
-
+const mongoose = require("mongoose");
 const SECRET_KEY = process.env.JWT_SECRETKEY;
 module.exports = {
   async signup(req, res) {
@@ -17,7 +16,6 @@ module.exports = {
       logintype,
       token,
     } = req.body;
-
     if (!logintype) {
       try {
         if (!email || !username) {
@@ -28,7 +26,6 @@ module.exports = {
           return res.status(200).send("User already exists");
         }
         const username_exist = await userModel.findOne({ username: username });
-
         if (username_exist) {
           return res.status(200).send("Username already exist");
         }
@@ -36,14 +33,12 @@ module.exports = {
           return res.status(400).send("Password doesm't match");
         }
         const hash_password = await bcrypt.hash(password, 10);
-
         const data = await userModel.create({
           email: email,
           username: username,
           password: hash_password,
           introduction: introduction,
         });
-
         if (!data) {
           return res.status(400).send("Failed to create user");
         } else {
@@ -58,29 +53,46 @@ module.exports = {
       try {
         const exist = await userModel.findOne({ email });
         if (exist) {
-          return res.status(200).send("User already exists");
-        }
-        const data = await userModel.create({
-          email: email,
-          username: username,
-          logintype: logintype,
-          token: token,
-        });
-        if (!data) {
-          return res.status(400).send("Failed to create user");
+          const token = jwt.sign(
+            { _id: exist._id, email: exist.email, role: exist.role },
+            SECRET_KEY,
+            {
+              expiresIn: "30d",
+            }
+          );
+          exist.token = token;
+          exist.save();
+          return res.status(200).send({ statusCode: 200, Message: token });
         } else {
-          res
-            .status(201)
-            .send({ statusCode: 201, Message: "User Created Successfully" });
+          const data = await userModel.create({
+            email: email,
+            username: username,
+            logintype: logintype,
+          });
+          console.log(data);
+          const token = jwt.sign(
+            { _id: exist._id, email: exist.email, role: exist.role },
+            SECRET_KEY,
+            {
+              expiresIn: "30d",
+            }
+          );
+          data.token = token;
+          data.save();
+          if (!data) {
+            return res.status(400).send("Failed to create user");
+          } else {
+            res.status(201).send({ statusCode: 201, Message: token });
+          }
         }
       } catch (error) {
+        console.log(error);
         return res.status(500).send(error);
       }
     }
   },
   async login(req, res) {
     const { email, password } = req.body;
-
     try {
       if (!email || !password) {
         return res.status(400).send("Please Provide Required Information");
@@ -93,9 +105,13 @@ module.exports = {
       if (!match) {
         return res.status(400).send("wrong password");
       } else {
-        const token = jwt.sign({ userId: exist._id }, SECRET_KEY, {
-          expiresIn: "30d",
-        });
+        const token = jwt.sign(
+          { _id: exist._id, email: exist.email, role: exist.role },
+          SECRET_KEY,
+          {
+            expiresIn: "30d",
+          }
+        );
         const userData = await userModel.findOneAndUpdate(
           { email: email },
           { token: token },
@@ -110,7 +126,7 @@ module.exports = {
   async findOne(req, res) {
     try {
       const { id } = req.params;
-      const data = await userModel.findOne({ _id: id }).select("-password");
+      const data = await userModel.findOne({ _id: id }).select("-password ");
       if (!data) {
         return res.status(400).send("something went wrong");
       } else {
@@ -121,30 +137,80 @@ module.exports = {
       return res.status(400).send(e);
     }
   },
-  async update_user(req, res) {
+  async update(req, res) {
     try {
-      const tokenUser = req.decode;
-      const get = await userModel
-        .findOne({ _id: tokenUser._id })
-        .select("-password");
-      let image = null;
-      if (req.file) {
-        image = process.env.Backend_URL_Image + req.file.filename;
-      } else {
-        image = get.image;
+      const { userId, dltImage, dltVideo } = req.body;
+      if (!userId) {
+        return res.status(404).send("required the userId");
       }
-      const update = await userModel.findOneAndUpdate(
-        { _id: tokenUser._id },
+      const exist = await userModel.findOne({ _id: userId });
+      if (!exist) {
+        return res.status(404).send("model not found");
+      }
+      let mainImage = exist.image; // Initialize with existing image URL
+      // Check if a new main image was uploaded
+      if (req.files && req.files["image"]) {
+        mainImage =
+          process.env.Backend_URL_Image + req.files["image"][0].filename;
+      }
+      let image = exist.images.slice(); // Create a copy of the existing image array
+      let video = exist.videos.slice(); // Create a copy of the existing video array
+      let removeImage = [];
+      let removeVideo = [];
+      if (dltImage) {
+        removeImage = dltImage.split(",");
+      }
+      if (dltVideo) {
+        removeVideo = dltVideo.split(",");
+      }
+      // Check if new images were uploaded
+      if (req.files && req.files["images"]) {
+        for (const uploadedImage of req.files["images"]) {
+          image.push(
+            `${process.env.Backend_URL_Image}${uploadedImage.filename}`
+          );
+        }
+      }
+      // Check if new videos were uploaded
+      if (req.files && req.files["videos"]) {
+        for (const uploadedVideo of req.files["videos"]) {
+          video.push(
+            `${process.env.Backend_URL_Image}${uploadedVideo.filename}`
+          );
+        }
+      }
+      // Remove specific images if requested
+      if (removeImage && Array.isArray(removeImage)) {
+        for (const imageToRemove of removeImage) {
+          const index = image.indexOf(imageToRemove);
+          if (index !== -1) {
+            image.splice(index, 1);
+          }
+        }
+      }
+      // Remove specific videos if requested
+      if (removeVideo && Array.isArray(removeVideo)) {
+        for (const videoToRemove of removeVideo) {
+          const index = video.indexOf(videoToRemove);
+          if (index !== -1) {
+            video.splice(index, 1);
+          }
+        }
+      }
+      const data = await userModel.findOneAndUpdate(
+        { _id: userId },
         {
           ...req.body,
-          image: image,
+          image: mainImage,
+          images: image,
+          videos: video,
         },
         { new: true }
       );
-      if (!get) {
+      if (!data) {
         return res.status(400).send("something went wrong");
       } else {
-        return res.status(200).send(update);
+        return res.status(200).send(data);
       }
     } catch (e) {
       console.log(e);
@@ -153,7 +219,7 @@ module.exports = {
   },
   async delete_user(req, res) {
     try {
-      const data = await userModel.findOneAndDelete({ _id: req.decode._id });
+      const data = await userModel.findOneAndDelete({ _id: req.params.id });
       return res.status(200).send("user delete successfully");
     } catch (e) {
       return res.status(500).send(e);
@@ -161,24 +227,26 @@ module.exports = {
   },
   async search_user(req, res) {
     try {
-      const { limit, page, q } = req.query;
+      const { q } = req.query;
 
       const data = await userModel
         .find()
-        .limit(limit || 7)
-        .skip(page > 0 ? (page - 1) * limit : 0)
-        .select("username introduction image location");
+        .select(
+          "username image  marital_status  body_type language  race distance sexual_orientation looking_for location age gender"
+        );
       if (q) {
         const result = await userModel
           .find({
             $or: [
               { username: { $regex: q, $options: "i" } },
-              { location: { $regex: q, $options: "i" } },
+              { country: { $regex: q, $options: "i" } },
+              { role: "user" },
             ],
           })
-          .limit(limit || 7)
-          .skip(page > 0 ? (page - 1) * limit : 0)
-          .select("username introduction image location");
+
+          .select(
+            "username image  marital_status  body_type language  race distance sexual_orientation looking_for location age gender"
+          );
         return res.status(200).send(result);
       }
       return res.status(200).send(data);
@@ -190,7 +258,7 @@ module.exports = {
   async logout(req, res) {
     try {
       const data = await userModel.findOneAndUpdate(
-        { _id: req.decode._id },
+        { _id: req.user._id },
         { token: null }
       );
       if (!data) {
@@ -297,7 +365,7 @@ module.exports = {
       const hash = bcrypt.hashSync(confirm_password, 10);
       console.log(confirm_password);
       const data = await userModel.findOneAndUpdate(
-        { _id: req.decode._id },
+        { _id: req.user._id },
         { password: hash },
         { new: true }
       );
@@ -317,7 +385,7 @@ module.exports = {
       if ((!old_password, !new_password, !confirm_password)) {
         return res.status(400).send("required the data");
       }
-      const get_pass = await userModel.findOne({ _id: req.decode._id });
+      const get_pass = await userModel.findOne({ _id: req.user._id });
       const password = await bcrypt.compare(old_password, get_pass.password);
       if (!password) {
         return res.status(400).send("wrong old_password");
@@ -327,7 +395,7 @@ module.exports = {
       }
       const hash = bcrypt.hashSync(confirm_password, 10);
       const data = await userModel.findOneAndUpdate(
-        { _id: req.decode._id },
+        { _id: req.user._id },
         { password: hash },
         { new: true }
       );
@@ -343,9 +411,9 @@ module.exports = {
   },
   async userdetail(req, res) {
     try {
-      const { userId } = req.params;
+      const { id } = req.params;
       const data = await userModel
-        .findById({ _id: userId })
+        .findById({ _id: id })
         .select(
           "username image  marital_status  body_type language  race distance sexual_orientation looking_for location age gender"
         );
@@ -394,7 +462,8 @@ module.exports = {
   },
   async model_mail(req, res) {
     try {
-      const email = req.decode.email;
+      const user = req.user;
+      const email = user.email;
       const verificationLink = `http://localhost:5000/api/loginVerify`;
       var transporter = nodemailer.createTransport({
         service: "gmail",
@@ -503,11 +572,183 @@ module.exports = {
       return res.status(500).send(e);
     }
   },
+  async subscribe(req, res) {
+    try {
+      const { modelId } = req.params;
+      const exist = await userModel.findOne({ _id: modelId });
+      exist.followers.forEach((el) => {
+        if (el.toString() == req.user._id) {
+          return res.status(400).send("model already subscribe");
+        }
+      });
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.Nodemailer_id,
+          pass: process.env.Nodemailer_pass,
+        },
+      });
+      var mailOptions = {
+        from: req.user.email,
+        to: exist.email,
+        subject: "new subscriber",
+        html: `<h4>Hello,${exist.firstName} ${exist.lastName}</h4>
+                 \nWe have a new subscribe request. from:\nName: ${req.user.username}\nEmail: ${req.user.email}`,
+      };
+      exist.followers.push(req.user._id);
+      await exist.save();
+      transporter.sendMail(mailOptions, function (error, result) {
+        if (error) {
+          console.log("Email error sent: " + JSON.stringify(error));
+          return res.status(400).send(error);
+        } else {
+          console.log("Email result sent: " + JSON.stringify(result));
+          return res.status(200).send("send mail successfully");
+        }
+      });
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
+  async upload_album(req, res) {
+    try {
+      const { album_name } = req.body;
+      let image = [];
+      if (req.files) {
+        req.files.forEach((file) => {
+          console.log(file.path);
+          var att = process.env.Backend_URL_Image + file.filename;
+          image.push(att);
+        });
+      }
+      const data = await userModel.findOneAndUpdate(
+        { _id: req.user._id },
+        { $push: { album: [{ name: album_name, images: image }] } },
+        { new: true }
+      );
+      if (!data) {
+        return res.status(400).send("something went wrong");
+      }
+      return res.status(200).send(data);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
+  async add_img_album(req, res) {
+    try {
+      const { albumId } = req.params;
+      if (!albumId) {
+        return res.status(400).send("albumId is required");
+      }
+      const convertedAlbumId = new mongoose.Types.ObjectId(albumId);
+      const exist = await userModel.findOne({ "album._id": convertedAlbumId });
+      if (!exist) {
+        return res.status(400).send("sommething went wrong");
+      }
+      let image = [];
+      if (req.files) {
+        req.files.forEach((file) => {
+          console.log(file.path);
+          var att = process.env.Backend_URL_Image + file.filename;
+          image.push(att);
+        });
+      }
+      const data = await userModel.findOneAndUpdate(
+        { _id: req.user._id, "album._id": albumId },
+        { $push: { "album.$.images": image }, ...req.body },
+        { new: true }
+      );
+      if (!data) {
+        return res.status(400).send("Error updating the document:");
+      } else {
+        return res.status(200).send("New image added successfully!");
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
+  async del_img_album(req, res) {
+    try {
+      const { albumId } = req.params;
+      const { filename } = req.body;
+      if (!albumId) {
+        return res.status(400).send("albumId is required");
+      }
+      if (!filename) {
+        return res.status(400).send("filename is required");
+      }
+      const convertedAlbumId = new mongoose.Types.ObjectId(albumId);
+      const exist = await userModel.findOne({ "album._id": convertedAlbumId });
+      if (!exist) {
+        return res.status(400).send("something went wrong");
+      }
+      const data = await userModel.findOneAndUpdate(
+        { _id: exist._id, "album._id": albumId },
+        { $pull: { "album.$.images": filename } },
+        { new: true }
+      );
+      if (!data) {
+        return res.status(400).send("Error updating the document:");
+      } else {
+        return res.status(200).send("file delete successfulliy");
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
+  async deleteAlbum(req, res) {
+    try {
+      const { albumId } = req.params;
+      if (!albumId) {
+        return res.status(400).send("albumId is required");
+      }
+      const convertedAlbumId = new mongoose.Types.ObjectId(albumId);
+      const exist = await userModel.findOne({ "album._id": convertedAlbumId });
+      if (!exist) {
+        return res.status(400).send("album id is not exist");
+      }
+      const data = await userModel.findOneAndUpdate(
+        { "album._id": convertedAlbumId },
+        { $pull: { album: { _id: convertedAlbumId } } },
+        { new: true }
+      );
+      if (!data) {
+        return res.status(400).send("album delete successfully");
+      } else {
+        return res.status(200).send("album delete successfully");
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
+  async addwallet(req, res) {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+      if (!amount) {
+        return res.status(400).send("amount is required");
+      }
+      const exist = await userModel.findOne({ _id: id });
+      if (!exist) {
+        return res.status(404).send("user not found");
+      }
+      exist.wallet += amount;
+      await exist.save();
+      return res.status(200).send("amount add successfully");
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
   async favModel(req, res) {
     try {
       const { userId, status } = req.body;
       const { modelId } = req.params;
-      console.log(status);
       if ((!userId, !modelId)) {
         return res.status(400).send("required the id");
       }
@@ -515,7 +756,7 @@ module.exports = {
       if (!userExist) {
         return res.status(400).send("user not exist");
       }
-      const modelExist = await model.findOne({ _id: modelId });
+      const modelExist = await userModel.findOne({ _id: modelId });
       if (!modelExist) {
         return res.status(400).send("model not exist");
       }
@@ -531,7 +772,7 @@ module.exports = {
         userExist.favouriteModels.pull(modelId);
         await userExist.save();
         console.log(userExist);
-        return res.status(200).send(userExist);
+        return res.status(200).send(user);
       } else {
         return res.status(400).send("something went wrong");
       }
@@ -540,7 +781,27 @@ module.exports = {
       return res.status(500).send(e);
     }
   },
+  async getfavModel(req, res) {
+    try {
+      const { userId } = req.params;
+      if (!userId) {
+        return res.status(400).send("userId is required");
+      }
+      const userExist = await userModel.findOne({ _id: userId });
+      if (!userExist) {
+        return res.status(404).send("user not exist");
+      }
+      const favModels = await userModel
+        .find({ _id: { $in: userExist.favouriteModels } })
+        .select("-password -updatedAt -createdAt");
+      return res.status(200).send(favModels);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
 };
+
 // const MERCHANT_ID = "YOUR_MERCHANT_ID";
 // const MERCHANT_KEY = "YOUR_MERCHANT_KEY";
 // const WEBSITE = "YOUR_WEBSITE";

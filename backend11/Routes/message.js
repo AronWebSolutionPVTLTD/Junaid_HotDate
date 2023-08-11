@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const messageController = require("../Controller/message")
-const {verifyToken} = require("../helper/middleware")
+const { verifyToken,verifyAdmin,verifyUser } = require("../helper/middleware")
 const multer = require("multer");
 const path = require("path");
 const uploadFilePath = path.resolve(__dirname, "../", "public/uploads");

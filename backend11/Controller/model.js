@@ -1,5 +1,6 @@
-const model = require("../Model/model");
 const userModel = require("../Model/usersModel");
+const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
 module.exports = {
   async addModel(req, res) {
     try {
@@ -9,7 +10,11 @@ module.exports = {
         DOB,
         lookingFor,
         marital_status,
+        booking_price,
         body_type,
+        username,
+        email,
+        password,
         language,
       } = req.body;
       console.log(req.body);
@@ -18,7 +23,11 @@ module.exports = {
         !lastName,
         !DOB,
         !lookingFor,
+        !email,
+        !password,
+        !booking_price,
         !marital_status,
+        !username,
         !body_type,
         !language)
       ) {
@@ -38,14 +47,20 @@ module.exports = {
           videos.push(`${process.env.Backend_URL_Image}${video.filename}`);
         }
       }
-      const data = await model.create({
+      const hash = await bcrypt.hash(password, 10);
+      const data = await userModel.create({
         firstName: firstName,
         lastName: lastName,
+        email: email,
+        password: hash,
+        username: username,
         DOB: DOB,
         lookingFor: lookingFor,
+        booking_price: booking_price,
         marital_status: marital_status,
         body_type: body_type,
         language: language,
+        role: "model",
         images: images,
         videos: videos,
       });
@@ -61,127 +76,24 @@ module.exports = {
   },
   async find(req, res) {
     try {
-      const { limit, q, page } = req.query;
-      const data = await model.find();
-      const total = await model.count();
+      const { q } = req.query;
+      const data = await userModel.find();
+      const total = await userModel.count();
       console.log(total, "total");
       if (q) {
-        let result = await model.find({
+        let result = await userModel.find({
           $or: [
             { firstName: { $regex: q, $options: "i" } },
             { lastName: { $regex: q, $options: "i" } },
+            { username: { $regex: q, $options: "i" } },
+            { country: { $regex: q, $options: "i" } },
           ],
+          role: "model",
         });
-
         console.log(q, result);
-
         return res.status(200).send({ data: result, total: total });
       }
-
-      res.status(200).send({ data, total: total });
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send(e);
-    }
-  },
-  async update(req, res) {
-    try {
-      const { modelId, dltImage, dltVideo } = req.body;
-      if (!modelId) {
-        return res.status(404).send("required the modelId");
-      }
-      const exist = await model.findOne({ _id: modelId });
-      if (!exist) {
-        return res.status(404).send("model not found");
-      }
-      let mainImage = null;
-      if (req.files && req.files["mainImage"]) {
-        for (const uploadedImage of req.files["mainImage"]) {
-          mainImage = `${process.env.Backend_URL_Image}${uploadedImage.filename}`;
-        }
-      } else {
-        mainImage = exist.mainImage;
-      }
-      let image = exist.images; // Create a copy of the existing image array
-      let video = exist.videos; // Create a copy of the existing video array
-      let removeImage = [];
-      let removeVideo = [];
-      if (dltImage) {
-        removeImage = dltImage.split(",");
-      }
-      if (dltVideo) {
-        removeVideo = dltVideo.split(",");
-      }
-      // Check if new images were uploaded
-      if (req.files && req.files["images"]) {
-        for (const uploadedImage of req.files["images"]) {
-          image.push(
-            `${process.env.Backend_URL_Image}${uploadedImage.filename}`
-          );
-        }
-      }
-      // Check if new videos were uploaded
-      if (req.files && req.files["videos"]) {
-        for (const uploadedVideo of req.files["videos"]) {
-          video.push(
-            `${process.env.Backend_URL_Image}${uploadedVideo.filename}`
-          );
-        }
-      }
-      // Remove specific images if requested
-      if (removeImage && Array.isArray(removeImage)) {
-        for (const imageToRemove of removeImage) {
-          const index = image.indexOf(imageToRemove);
-          if (index !== -1) {
-            image.splice(index, 1);
-          }
-        }
-      }
-      // Remove specific videos if requested
-      if (removeVideo && Array.isArray(removeVideo)) {
-        for (const videoToRemove of removeVideo) {
-          const index = video.indexOf(videoToRemove);
-          if (index !== -1) {
-            video.splice(index, 1);
-          }
-        }
-      }
-      const data = await model.findOneAndUpdate(
-        { _id: modelId },
-        {
-          ...req.body,
-          mainImage: mainImage,
-          images: image,
-          videos: video,
-        },
-        { new: true }
-      );
-      if (!data) {
-        return res.status(400).send("something went wrong");
-      } else {
-        return res.status(200).send(data);
-      }
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send(e);
-    }
-  },
-  async delete(req, res) {
-    try {
-      const { id } = req.params;
-      if (!id) {
-        return res.status(404).send("required the modelId");
-      }
-      const exist = await model.findOne({ _id: id });
-      if (!exist) {
-        return res.status(404).send("model not found");
-      }
-      const data = await model.findByIdAndDelete({ _id: id });
-      if (!data) {
-        return res.status(400).send("something went wrong");
-      } else {
-        return res.status(200).send("delete successfully");
-      }
+      return res.status(200).send({ data, total: total });
     } catch (e) {
       console.log(e);
       return res.status(500).send(e);
@@ -190,108 +102,74 @@ module.exports = {
   async booking_model(req, res) {
     try {
       const { modelId } = req.params;
-      const { status } = req.query;
-      const exist = await model
-        .findOne({ _id: modelId })
-        .select(
-          "firstName booking_by mainImage lastName location booking_price description"
-        )
-        .populate("booking_by", "username");
-      if (status == "book_model") {
-        console.log(exist.booking_by);
-        if (exist.booking_by !== undefined) {
-          return res.status(404).send("model already booked");
+      const { userId } = req.body;
+      const exist = await userModel.findOne({ _id: modelId });
+      if (exist.booking_by !== undefined) {
+        return res.status(404).send("model already booked");
+      }
+      const update = await userModel.findOneAndUpdate(
+        { _id: modelId },
+        { booking_by: userId },
+        { new: true }
+      );
+      let transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.Nodemailer_id,
+          pass: process.env.Nodemailer_pass,
+        },
+      });
+      let html = `<!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Model Book </title>
+            </head>
+            <body>
+                <p>Hello Model</p>
+                <p>Your booking has been confirmed. We look forward to seeing you soon!</p>
+            </body>
+            </html>
+            `;
+      const mailOptions = {
+        from: req.user.email,
+        to: update.email,
+        subject: "Book Model",
+        html: html,
+      };
+      transporter.sendMail(mailOptions, (err, into) => {
+        if (err) {
+          return res.status(400).send(err);
+        } else {
+          return res.status(200).send("sent mail successfully");
         }
-        const update = await model.findOneAndUpdate(
-          { _id: modelId },
-          { booking_by: req.decode._id },
-          { new: true }
-        );
-        return res.status(200).send("model book succsessfully");
-      }
-      return res.status(200).send(exist);
+      });
     } catch (e) {
       console.log(e);
       return res.status(500).send(e);
     }
   },
-  async getModel(req, res) {
-    try {
-      const { id } = req.params;
-      const data = await model.findOne({ _id: id });
-      if (!data) {
-        return res.status(400).send("something went wrong");
-      } else {
-        return res.status(200).send(data);
-      }
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send(e);
-    }
-  },
-  async follow_request(req, res) {
-    const { modelId } = req.params;
-    try {
-      const get = await model.findById(modelId);
-      if (!get) {
-        return res.status(404).json({ error: "model not found" });
-      }
-      const followersIndex = get.followers.findIndex(
-        (p) => p.user.toString() === req.decode._id
-      );
-      if (followersIndex !== -1) {
-        return res.status(400).json({ error: "user already added" });
-      }
-      get.followers.push({ user: req.decode._id });
-      await get.save();
-      res.status(200).json({ message: "user request sent successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  },
-  async update_follow_request(req, res) {
-    const { modelId, followerId } = req.params;
-    const { status } = req.body;
-    try {
-      // Find the event by ID
-      const data = await model.findById(modelId);
-      if (!data) {
-        return res.status(404).json({ error: "Event not found" });
-      }
-      console.log(followerId);
-      const follower = data.followers.find(
-        (el) => el._id.toString() === followerId
-      );
-      if (!follower) {
-        return res.status(404).json({ error: "user  not found" });
-      }
-      follower.status = status;
-      await data.save();
-      return res.status(200).json({ message: "data updated successfully" });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  },
+
   async update_wallet(req, res) {
     try {
-      const { modelId, amount } = req.body;
+      const { modelId } = req.params;
+      const { userId, amount } = req.body;
       if ((!modelId, !amount)) {
         return res.status(400).send("required the data");
       }
-      const get = await model.findOne({ _id: modelId });
+
+      const get = await userModel.findOne({ _id: modelId });
       if (!get) {
         return res.status(400).send("model not exist");
       }
-      const data = await model.findOneAndUpdate(
+      const data = await userModel.findOneAndUpdate(
         { _id: modelId },
-        { paymentUser: req.decode._id, wallet: get.wallet + amount },
+        { paymentUser: userId, wallet: get.wallet + amount },
         { new: true }
       );
       const user = await userModel.findOneAndUpdate(
-        { _id: req.decode._id },
-        { wallet: req.decode.wallet - amount },
+        { _id: userId },
+        { wallet: req.user.wallet - amount },
         { new: true }
       );
       if (!data) {
@@ -302,6 +180,91 @@ module.exports = {
     } catch (error) {
       console.error(error);
       return res.status(500).send({ error: "Internal server error" });
+    }
+  },
+  async is_modelverify(req, res) {
+    try {
+      const { modelId } = req.params;
+      const { status } = req.body;
+      const exist = await userModel.findOne({ _id: modelId });
+      if (!exist) {
+        return res.status(404).send("model not found");
+      }
+
+      let text = "";
+      if (status == "accept") {
+        text = "Congratulations! Your account registration has been accepted.";
+      } else {
+        text = "Your account registration has been rejected.";
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.Nodemailer_id,
+          pass: process.env.Nodemailer_pass,
+        },
+      });
+
+      const mailOptions = {
+        from: req.user.email,
+        to: exist.email, // Make sure exist.email contains a valid email address
+        subject: "Account registration", // Subject of the email
+        html: `<h4>${text}</h4>`, // Email content in HTML format
+      };
+
+      if (!exist.email) {
+        return res.status(400).send("Email address not found for the model");
+      }
+
+      if (status == "accept") {
+        const data = await userModel.findOneAndUpdate(
+          { _id: exist._id },
+          { isverify: true },
+          { new: true }
+        );
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.log("Email error sent: " + JSON.stringify(error));
+            return res.status(400).send(error);
+          } else {
+            console.log("Email result sent: " + JSON.stringify(info));
+            return res.status(200).send("Acceptance email sent successfully");
+          }
+        });
+      } else if (status == "reject") {
+        const data = await userModel.findByIdAndDelete(
+          { _id: exist._id },
+          { new: true }
+        );
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.log("Email error sent: " + JSON.stringify(error));
+            return res.status(400).send(error);
+          } else {
+            console.log("Email result sent: " + JSON.stringify(info));
+            return res.status(200).send("Rejection email sent successfully");
+          }
+        });
+      } else {
+        return res.status(500).send("something went wrong");
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
+    }
+  },
+  async isLive(req, res) {
+    try {
+      const data = await userModel.find({ isLive: true });
+      if (!data) {
+        return res.status(400).send("data not found");
+      } else {
+        return res.status(200).send(data);
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send(e);
     }
   },
 };
