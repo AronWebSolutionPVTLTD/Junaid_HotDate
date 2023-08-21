@@ -46,7 +46,7 @@ module.exports = {
           const verificationLink = `${process.env.FRONTEND_URL}/verified/${data._id}`;
 
           let emailHtml = `
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
