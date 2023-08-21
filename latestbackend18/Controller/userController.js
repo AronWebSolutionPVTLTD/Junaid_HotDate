@@ -24,11 +24,11 @@ module.exports = {
         }
         const exist = await userModel.findOne({ email });
         if (exist) {
-          return res.status(200).send("User already exists");
+          return res.status(400).send("User already exists");
         }
         const username_exist = await userModel.findOne({ username: username });
         if (username_exist) {
-          return res.status(200).send("Username already exist");
+          return res.status(400).send("Username already exist");
         }
         if (confirmpassword !== password) {
           return res.status(400).send("Password doesm't match");
@@ -43,12 +43,10 @@ module.exports = {
         if (!data) {
           return res.status(400).send("Failed to create user");
         } else {
-          const verificationLink = `http://localhost:3000/verified/${data._id}`;
-
+          const verificationLink = `${process.env.FRONTEND_URL}/verified/${data._id}`;
           let emailHtml = `
           <!doctype html>
           <html lang="en-US">
-          
           <head>
               <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
               <title>Email Verification</title>
@@ -57,7 +55,6 @@ module.exports = {
                   a:hover { text-decoration: underline !important; }
               </style>
           </head>
-          
           <body marginheight="0" topmargin="0" marginwidth="0" style="margin: 0px; background-color: #F2F3F8;" leftmargin="0">
               <!-- 100% body table -->
               <table cellspacing="0" border="0" cellpadding="0" width="100%" bgcolor="#F2F3F8"
@@ -106,7 +103,6 @@ module.exports = {
               </table>
               <!-- /100% body table -->
           </body>
-          
           </html>
           `;
           var mailOptions = {
