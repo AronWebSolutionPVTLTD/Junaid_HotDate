@@ -6,7 +6,7 @@ const Mailsend = require("../helper/mail");
 const mongoose = require("mongoose");
 const SECRET_KEY = process.env.JWT_SECRETKEY;
 module.exports = {
-  async signup(req, res) {
+   async signup(req, res) {
     const {
       email,
       password,
@@ -58,7 +58,7 @@ module.exports = {
                       background:linear-gradient(46deg, #F79220 55.15%, #F94A2B 82%);
                   }
                   .email_temp_inner {
-                      max-width: 720px;
+                    padding:0 20px;
                       margin: 40px auto 0;
                   }
                   img{
@@ -80,7 +80,7 @@ module.exports = {
               margin: 0 auto 150px;
               text-align: center;
               background: #00bf63;
-              color: #f7f7f7;
+              color: #f7f7f7 !important;
               font-size: 18px;
               padding: 12px 10px;
               border-radius: 7px;
@@ -112,10 +112,11 @@ module.exports = {
                   <div class="top_bar"></div>
                   <div class="email_temp_inner">
                       <div class="logo_wrap">
-                          <img src="https://hot-date.vercel.app/landingPage/images/landing-logo.png" alt="Logo" />
+                          <img src="${process.env.FRONTEND_URL}/landingPage/images/landing-logo.png" alt="Logo" />
                       </div>
                       <div class="confirm_email_wrap">
                           <p class="confirm_email_title">Please confirm your email address by clicking the 'Verify Email' button.</p>
+                          <p class="confirm_email_title">After clicking the verify button, you will be redirected to Login page. Please use your credentials to Login.</p>
                           <a class="verification_btn" href=${verificationLink}>Verify Email</a>
                           <div class="confirm_email_footer">
                               <p>Sincerely,</p>
