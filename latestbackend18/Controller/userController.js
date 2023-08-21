@@ -124,7 +124,7 @@ module.exports = {
                       </div>
                       <div class="confirm_email_wrap">
                           <h1>Please Confirm Email</h1>
-                          <p class="confirm_email_title">Please confirm your email address by clicking the <b>'Verify Email'</b> button. After clicking the verify button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
+                          <p class="confirm_email_title">Please confirm your email address by clicking the <b>'Verify Email'</b> button. After clicking the verify email button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
                           <a class="verification_btn" href=${verificationLink}>Verify Email</a>
                           <div class="confirm_email_footer">
                               <p>Sincerely,</p>
