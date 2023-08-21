@@ -112,7 +112,7 @@ module.exports = {
                   <div class="top_bar"></div>
                   <div class="email_temp_inner">
                       <div class="logo_wrap">
-                          <img src="http://localhost:3000/landingPage/images/landing-logo.png" alt="Logo" />
+                          <img src="https://hot-date.vercel.app/landingPage/images/landing-logo.png" alt="Logo" />
                       </div>
                       <div class="confirm_email_wrap">
                           <p class="confirm_email_title">Please confirm your email address by clicking the 'Verify Email' button.</p>
