@@ -6,7 +6,7 @@ const Mailsend = require("../helper/mail");
 const mongoose = require("mongoose");
 const SECRET_KEY = process.env.JWT_SECRETKEY;
 module.exports = {
-  async signup(req, res) {
+ async signup(req, res) {
     const {
       email,
       password,
@@ -70,9 +70,9 @@ module.exports = {
                   }
                   .confirm_email_title {
               text-align: center;
-              font-size: 17px;
+          
               margin-bottom: 20px;
-              font-weight: 600;
+          
           }
           .confirm_email_wrap h1 {
               text-align: center;
@@ -124,7 +124,7 @@ module.exports = {
                       </div>
                       <div class="confirm_email_wrap">
                           <h1>Please Confirm Email</h1>
-                          <p class="confirm_email_title">Please confirm your email address by clicking the 'Verify Email' button. After clicking the verify email button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
+                          <p class="confirm_email_title">Please confirm your email address by clicking the <b>'Verify Email'</b> button. After clicking the verify button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
                           <a class="verification_btn" href=${verificationLink}>Verify Email</a>
                           <div class="confirm_email_footer">
                               <p>Sincerely,</p>
