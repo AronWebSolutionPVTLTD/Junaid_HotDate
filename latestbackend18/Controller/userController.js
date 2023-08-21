@@ -70,8 +70,15 @@ module.exports = {
                   }
                   .confirm_email_title {
               text-align: center;
-              font-size: 20px;
+              font-size: 17px;
               margin-bottom: 20px;
+              font-weight: 600;
+          }
+          .confirm_email_wrap h1 {
+              text-align: center;
+              color: #515151;
+              margin-bottom: 19px;
+              font-weight: 700;
           }
           .verification_btn {
               display: block;
@@ -85,6 +92,7 @@ module.exports = {
               padding: 12px 10px;
               border-radius: 7px;
               cursor: pointer;
+              text-decoration: none;
           }
           .confirm_email_footer {
               margin-bottom: 50px;
@@ -115,8 +123,8 @@ module.exports = {
                           <img src="${process.env.FRONTEND_URL}/landingPage/images/landing-logo.png" alt="Logo" />
                       </div>
                       <div class="confirm_email_wrap">
-                          <p class="confirm_email_title">Please confirm your email address by clicking the 'Verify Email' button.</p>
-                          <p class="confirm_email_title">After clicking the verify button, you will be redirected to Login page. Please use your credentials to Login.</p>
+                          <h1>Please Confirm Email</h1>
+                          <p class="confirm_email_title">Please confirm your email address by clicking the 'Verify Email' button. After clicking the verify button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
                           <a class="verification_btn" href=${verificationLink}>Verify Email</a>
                           <div class="confirm_email_footer">
                               <p>Sincerely,</p>
