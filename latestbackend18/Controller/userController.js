@@ -181,17 +181,6 @@ module.exports = {
             isVerify: true,
           });
           console.log(data);
-          const token = jwt.sign(
-            { _id: exist._id, email: exist.email, role: exist.role },
-            SECRET_KEY,
-            {
-              expiresIn: "30d",
-              expiresIn: "30d",
-            }
-          );
-          data.token = token;
-          data.save();
-         
           let emailHtml = `
           <!DOCTYPE html>
           <html lang="en">
@@ -298,6 +287,18 @@ module.exports = {
             html: emailHtml,
           };
           Mailsend(req, res, mailOptions);
+          const token = jwt.sign(
+            { _id: exist._id, email: exist.email, role: exist.role },
+            SECRET_KEY,
+            {
+              expiresIn: "30d",
+              expiresIn: "30d",
+            }
+          );
+          data.token = token;
+          data.save();
+         
+         
           if (!data) {
             return res.status(400).send("Failed to create user");
           } else {
