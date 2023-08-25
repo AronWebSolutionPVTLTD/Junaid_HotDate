@@ -191,6 +191,113 @@ module.exports = {
           );
           data.token = token;
           data.save();
+         
+          let emailHtml = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                  *{margin:0;padding: 0;box-sizing: border-box;}
+                  .top_bar {
+                      height: 30px;
+                      background:linear-gradient(46deg, #F79220 55.15%, #F94A2B 82%);
+                  }
+                  .email_temp_inner {
+                    padding:0 20px;
+                      margin: 40px auto 0;
+                  }
+                  img{
+                      max-width: 100%;
+                  }
+                  .logo_wrap {
+                      max-width: 130px;
+                      margin: 50px auto;
+                  }
+                  .confirm_email_title {
+              text-align: center;
+          
+              margin-bottom: 20px;
+          
+          }
+          .confirm_email_wrap h1 {
+              text-align: center;
+              color: #515151;
+              margin-bottom: 19px;
+              font-weight: 700;
+          }
+          .verification_btn {
+              display: block;
+              width: 100%;
+              max-width: 200px;
+              margin: 0 auto 150px;
+              text-align: center;
+              background: #00bf63;
+              color: #f7f7f7 !important;
+              font-size: 18px;
+              padding: 12px 10px;
+              border-radius: 7px;
+              cursor: pointer;
+              text-decoration: none;
+          }
+          .confirm_email_footer {
+              margin-bottom: 50px;
+          }
+          
+          
+          .footer_title {
+              font-size: 20px;
+              font-weight: 600;
+              margin-bottom: 10px;
+          }
+          .footer_right {
+              display: grid;
+              gap: 6px;
+          }
+          
+          .footer_right a {
+              color: #1357b3;
+              text-decoration: none;
+          }
+              </style>
+          </head>
+          <body>
+              <div class="email_temp_wrapper">
+                  <div class="top_bar"></div>
+                  <div class="email_temp_inner">
+                      <div class="logo_wrap">
+                          <img src="${process.env.FRONTEND_URL}/landingPage/images/landing-logo.png" alt="Logo" />
+                      </div>
+                      <div class="confirm_email_wrap">
+                          <h1>Hot Date App</h1>
+                          <p class="confirm_email_title">You've just logged in via google mail now you can surf around the website </p>
+              
+                          <div class="confirm_email_footer">
+                              <p>Sincerely,</p>
+                              <p>Your Kaizen Globe staff</p>
+                          </div>
+                      </div>
+                      <div class="email_temp_footer">
+                          <p class="footer_title">Contact Us</p>
+                          <div class="footer_right">
+                              <p>Kaizen Globe</p>
+                              <p><a href="tel:+91-1234567890">+91-1234567890</a></p>
+                              <p><a href="mailto:test@gmail.com">test@gmail.com</a></p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </body>
+          </html>
+          `;
+          var mailOptions = {
+            from: process.env.Nodemailer_id,
+            to: email,
+            subject: "user verify",
+            html: emailHtml,
+          };
+          Mailsend(req, res, mailOptions);
           if (!data) {
             return res.status(400).send("Failed to create user");
           } else {
