@@ -182,103 +182,47 @@ module.exports = {
           });
           console.log(data);
           let emailHtml = `
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                  *{margin:0;padding: 0;box-sizing: border-box;}
-                  .top_bar {
-                      height: 30px;
-                      background:linear-gradient(46deg, #F79220 55.15%, #F94A2B 82%);
-                  }
-                  .email_temp_inner {
-                    padding:0 20px;
-                      margin: 40px auto 0;
-                  }
-                  img{
-                      max-width: 100%;
-                  }
-                  .logo_wrap {
-                      max-width: 130px;
-                      margin: 50px auto;
-                  }
-                  .confirm_email_title {
-              text-align: center;
-          
-              margin-bottom: 20px;
-          
-          }
-          .confirm_email_wrap h1 {
-              text-align: center;
-              color: #515151;
-              margin-bottom: 19px;
-              font-weight: 700;
-          }
-          .verification_btn {
-              display: block;
-              width: 100%;
-              max-width: 200px;
-              margin: 0 auto 150px;
-              text-align: center;
-              background: #00bf63;
-              color: #f7f7f7 !important;
-              font-size: 18px;
-              padding: 12px 10px;
-              border-radius: 7px;
-              cursor: pointer;
-              text-decoration: none;
-          }
-          .confirm_email_footer {
-              margin-bottom: 50px;
-          }
-          
-          
-          .footer_title {
-              font-size: 20px;
-              font-weight: 600;
-              margin-bottom: 10px;
-          }
-          .footer_right {
-              display: grid;
-              gap: 6px;
-          }
-          
-          .footer_right a {
-              color: #1357b3;
-              text-decoration: none;
-          }
-              </style>
-          </head>
-          <body>
-              <div class="email_temp_wrapper">
-                  <div class="top_bar"></div>
-                  <div class="email_temp_inner">
-                      <div class="logo_wrap">
-                          <img src="${process.env.FRONTEND_URL}/landingPage/images/landing-logo.png" alt="Logo" />
-                      </div>
-                      <div class="confirm_email_wrap">
-                          <h1>Hot Date App</h1>
-                          <p class="confirm_email_title">You've just logged in via google mail now you can surf around the website </p>
-              
-                          <div class="confirm_email_footer">
-                              <p>Sincerely,</p>
-                              <p>Your Kaizen Globe staff</p>
-                          </div>
-                      </div>
-                      <div class="email_temp_footer">
-                          <p class="footer_title">Contact Us</p>
-                          <div class="footer_right">
-                              <p>Kaizen Globe</p>
-                              <p><a href="tel:+91-1234567890">+91-1234567890</a></p>
-                              <p><a href="mailto:test@gmail.com">test@gmail.com</a></p>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </body>
-          </html>
+         <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Hot Date Couple Matching!</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin-top: 30px; background-color: #ffffff;">
+        <tr>
+            <td align="center" bgcolor="#6C63FF" style="padding: 20px 0;">
+                <h1 style="color: #ffffff;">Welcome to Couple Matching!</h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px;">
+                <p>Hello ${data.username},</p>
+                <p>Thank you for registering on Hot Date App! We're excited to have you join our community.</p>
+                <p>Your registration details:</p>
+                <ul>
+                    <li><strong>Email:</strong> ${data.email}</li>
+                    <li><strong>Logged in:</strong> Google</li>
+                    <!-- Add more registration details as needed -->
+                </ul>
+                <p>We look forward to helping you find your perfect match. Get started by completing your profile and exploring potential matches on our platform.</p>
+                <p>If you have any questions or need assistance, feel free to contact our support team.</p>
+                <p>Best regards,<br>
+                The Hot Date Team</p>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" bgcolor="#f4f4f4" style="padding: 20px;">
+                <p style="margin: 0;">&copy; 2023 Hot Date Couple. All rights reserved.</p>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
+
           `;
           var mailOptions = {
             from: process.env.Nodemailer_id,
