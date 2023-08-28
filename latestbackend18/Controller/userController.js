@@ -232,7 +232,7 @@ module.exports = {
           };
           Mailsend(req, res, mailOptions);
           const token = jwt.sign(
-            { _id: exist._id, email: exist.email, role: exist.role },
+            { _id: data._id, email: data.email, role: data.role },
             SECRET_KEY,
             {
               expiresIn: "30d",
