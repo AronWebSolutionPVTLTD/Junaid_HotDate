@@ -205,7 +205,7 @@ module.exports = {
                 <ul>
                     <li><strong>Name:</strong> ${data.name}</li>
                     <li><strong>Email:</strong> ${data.email}</li>
-                    <li><strong>Logged in:</strong> Google</li>
+                    <li><strong>Logged in with:</strong> Google</li>
                 </ul>
                 <p>We look forward to helping you find your perfect match. Get started by completing your profile and exploring potential matches on our platform.</p>
                 <p>If you have any questions or need assistance, feel free to contact our support team.</p>
