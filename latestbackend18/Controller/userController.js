@@ -193,8 +193,8 @@ module.exports = {
 
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin-top: 30px; background-color: #ffffff;">
         <tr>
-            <td align="center" bgcolor="#6C63FF" style="padding: 20px 0;">
-                <h1 style="color: #f79220;">Welcome to Hot Date App!</h1>
+            <td align="center" bgcolor="#f79220" style="padding: 20px 0;">
+                <h1 style="color:#ffffff ;">Welcome to Hot Date App!</h1>
             </td>
         </tr>
         <tr>
