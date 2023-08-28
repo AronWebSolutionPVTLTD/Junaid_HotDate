@@ -194,7 +194,7 @@ module.exports = {
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin-top: 30px; background-color: #ffffff;">
         <tr>
             <td align="center" bgcolor="#6C63FF" style="padding: 20px 0;">
-                <h1 style="color: #ffffff;">Welcome to Couple Matching!</h1>
+                <h1 style="color: #f79220;">Welcome to Hot Date App!</h1>
             </td>
         </tr>
         <tr>
@@ -203,9 +203,9 @@ module.exports = {
                 <p>Thank you for registering on Hot Date App! We're excited to have you join our community.</p>
                 <p>Your registration details:</p>
                 <ul>
+                    <li><strong>Name:</strong> ${data.name}</li>
                     <li><strong>Email:</strong> ${data.email}</li>
                     <li><strong>Logged in:</strong> Google</li>
-                    <!-- Add more registration details as needed -->
                 </ul>
                 <p>We look forward to helping you find your perfect match. Get started by completing your profile and exploring potential matches on our platform.</p>
                 <p>If you have any questions or need assistance, feel free to contact our support team.</p>
