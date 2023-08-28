@@ -203,7 +203,7 @@ module.exports = {
                 <p>Thank you for registering on Hot Date App! We're excited to have you join our community.</p>
                 <p>Your registration details:</p>
                 <ul>
-                    <li><strong>Name:</strong> ${data.name}</li>
+                    <li><strong>Name:</strong> ${data.username}</li>
                     <li><strong>Email:</strong> ${data.email}</li>
                     <li><strong>Logged in with:</strong> Google</li>
                 </ul>
