@@ -170,7 +170,7 @@ module.exports = {
             logintype: logintype,
           });
           console.log(data);
-          const verificationLink = `http://localhost:3000/verified/${data._id}`;
+          const verificationLink = `https://hot-date.vercel.app/verified/${data._id}`;
           const emailOptions = createVerificationEmailOptions(
             verificationLink,
             email
@@ -549,7 +549,7 @@ module.exports = {
     try {
       const user = req.user;
       const email = user._id;
-      const verificationLink = `http://localhost:3000/verified/${email}`;
+      const verificationLink = `https://hot-date.vercel.app/verified/${email}`;
 
       let emailHtml = `
       <!doctype html>
