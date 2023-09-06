@@ -6,7 +6,7 @@ const Mailsend = require("../helper/mail");
 const mongoose = require("mongoose");
 const SECRET_KEY = process.env.JWT_SECRETKEY;
 module.exports = {
-  async signup(req, res) {
+ async signup(req, res) {
     const {
       email,
       password,
@@ -124,7 +124,11 @@ module.exports = {
                       </div>
                       <div class="confirm_email_wrap">
                           <h1>Please Confirm Email</h1>
+<<<<<<< HEAD
                           <p class="confirm_email_title">Please confirm your email address by clicking the <b>'Verify Email'</b> button. After clicking the verify button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
+=======
+                          <p class="confirm_email_title">Please confirm your email address by clicking the <b>'Verify Email'</b> button. After clicking the verify email button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
+>>>>>>> ab45c0336a5d0fa1ea8b2b02ffd0420f16ab5e33
                           <a class="verification_btn" href=${verificationLink}>Verify Email</a>
                           <div class="confirm_email_footer">
                               <p>Sincerely,</p>
@@ -181,8 +185,58 @@ module.exports = {
             isVerify: true,
           });
           console.log(data);
+          let emailHtml = `
+         <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Hot Date Couple Matching!</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; margin-top: 30px; background-color: #ffffff;">
+        <tr>
+            <td align="center" bgcolor="#f79220" style="padding: 20px 0;">
+                <h1 style="color:#ffffff ;">Welcome to Hot Date App!</h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px;">
+                <p>Hello ${data.username},</p>
+                <p>Thank you for registering on Hot Date App! We're excited to have you join our community.</p>
+                <p>Your registration details:</p>
+                <ul>
+                    <li><strong>Name:</strong> ${data.username}</li>
+                    <li><strong>Email:</strong> ${data.email}</li>
+                    <li><strong>Logged in with:</strong> Google</li>
+                </ul>
+                <p>We look forward to helping you find your perfect match. Get started by completing your profile and exploring potential matches on our platform.</p>
+                <p>If you have any questions or need assistance, feel free to contact our support team.</p>
+                <p>Best regards,<br>
+                The Hot Date Team</p>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" bgcolor="#f4f4f4" style="padding: 20px;">
+                <p style="margin: 0;">&copy; 2023 Hot Date Couple. All rights reserved.</p>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
+
+          `;
+          var mailOptions = {
+            from: process.env.Nodemailer_id,
+            to: email,
+            subject: "user verify",
+            html: emailHtml,
+          };
+          Mailsend(req, res, mailOptions);
           const token = jwt.sign(
-            { _id: exist._id, email: exist.email, role: exist.role },
+            { _id: data._id, email: data.email, role: data.role },
             SECRET_KEY,
             {
               expiresIn: "30d",
@@ -191,6 +245,8 @@ module.exports = {
           );
           data.token = token;
           data.save();
+         
+         
           if (!data) {
             return res.status(400).send("Failed to create user");
           } else {

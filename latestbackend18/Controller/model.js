@@ -155,7 +155,6 @@ module.exports = {
       if (q) {
         let result = await userModel.find({
           $or: [
-            { role: "model" },
             { firstName: { $regex: q, $options: "i" } },
             { lastName: { $regex: q, $options: "i" } },
             { username: { $regex: q, $options: "i" } },
