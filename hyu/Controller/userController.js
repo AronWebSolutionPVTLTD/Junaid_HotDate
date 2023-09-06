@@ -135,7 +135,7 @@ module.exports = {
         if (!data) {
           return res.status(400).send("Failed to create user");
         } else {
-          const verificationLink = `http://localhost:3000/verified/${data._id}`;
+          const verificationLink = `https://hot-date.vercel.app/couple/${data._id}`;
           const emailOptions = createVerificationEmailOptions(
             verificationLink,
             email
