@@ -119,11 +119,11 @@ module.exports = {
         }
         const exist = await userModel.findOne({ email: email });
         if (exist) {
-          return res.status(200).send("User already exists");
+          return res.status(400).send("User already exists");
         }
         const username_exist = await userModel.findOne({ username: username });
         if (username_exist) {
-          return res.status(200).send("Username already exist");
+          return res.status(400).send("Username already exist");
         }
         const hash_password = await bcrypt.hash(password, 10);
         const data = await userModel.create({
@@ -177,7 +177,7 @@ module.exports = {
           );
           Mailsend(req, res, emailOptions);
           const token = jwt.sign(
-            { _id: exist._id, email: exist.email, role: exist.role },
+            { _id: data._id, email: data.email, role: data.role },
             SECRET_KEY,
             {
               expiresIn: "30d",
@@ -211,11 +211,11 @@ module.exports = {
         return res.status(400).send("User doesn't exist");
       }
       if (exist.isVerify == false) {
-        return res.status(400).send("email is not verify");
+        return res.status(400).send("Email is not verified");
       }
       const match = await bcrypt.compare(password, exist.password);
       if (!match) {
-        return res.status(400).send("wrong password");
+        return res.status(400).send("Your password is wrong");
       } else {
         const token = jwt.sign(
           { _id: exist._id, email: exist.email, role: exist.role },
