@@ -2,108 +2,17 @@ const userModel = require("../Model/usersModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
+const mailHtml = require("../helper/mail_Html")
 const Mailsend = require("../helper/mail");
 const mongoose = require("mongoose");
 const SECRET_KEY = process.env.JWT_SECRETKEY;
-
-function createVerificationEmailOptions(verificationLink, email) {
-  let emailHtml = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-          *{margin:0;padding: 0;box-sizing: border-box;}
-          .top_bar {
-              height: 30px;
-              background:linear-gradient(46deg, #F79220 55.15%, #F94A2B 82%);
-          }
-          .email_temp_inner {
-            padding:0 20px;
-              margin: 40px auto 0;
-          }
-          img{
-              max-width: 100%;
-          }
-          .logo_wrap {
-              max-width: 130px;
-              margin: 50px auto;
-          }
-          .confirm_email_title {
-      text-align: center;
-      margin-bottom: 20px;
-  }
-  .confirm_email_wrap h1 {
-      text-align: center;
-      color: #515151;
-      margin-bottom: 19px;
-      font-weight: 700;
-  }
-  .verification_btn {
-      display: block;
-      width: 100%;
-      max-width: 200px;
-      margin: 0 auto 150px;
-      text-align: center;
-      background: #00BF63;
-      color: #F7F7F7 !important;
-      font-size: 18px;
-      padding: 12px 10px;
-      border-radius: 7px;
-      cursor: pointer;
-      text-decoration: none;
-  }
-  .confirm_email_footer {
-      margin-bottom: 50px;
-  }
-  .footer_title {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 10px;
-  }
-  .footer_right {
-      display: grid;
-      gap: 6px;
-  }
-  .footer_right a {
-      color: #1357B3;
-      text-decoration: none;
-  }
-      </style>
-  </head>
-  <body>
-      <div class="email_temp_wrapper">
-          <div class="top_bar"></div>
-          <div class="email_temp_inner">
-              <div class="logo_wrap">
-                  <img src="https://hot-date.vercel.app/landingPage/images/landing-logo.png" alt="Logo" />
-              </div>
-              <div class="confirm_email_wrap">
-                  <h1>Please Confirm Email</h1>
-                  <p class="confirm_email_title">Please confirm your email address by clicking the <b>'Verify Email'</b> button. After clicking the verify email button, you will be redirected to Login page. Please use your newly created credentials to login.</p>
-                  <a class="verification_btn" href=${verificationLink}>Verify Email</a>
-                  <div class="confirm_email_footer">
-                      <p>Sincerely,</p>
-                      <p>Your Kaizen Globe staff</p>
-                  </div>
-              </div>
-              <div class="email_temp_footer">
-                  <p class="footer_title">Contact Us</p>
-                  <div class="footer_right">
-                      <p>Kaizen Globe</p>
-                      <p><a href="tel:+91-1234567890">+91-1234567890</a></p>
-                      <p><a href="mailto:test@gmail.com">test@gmail.com</a></p>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </body>
-  </html>
-  `;
+function createVerificationEmailOptions(link,data) {
+  // console.log(data,"DATA")
+  let emailHtml = mailHtml(data,link,"Thank you for registering on Hot Date App! We're excited to have you join our community.")
+  // console.log(emailHtml)
   return {
     from: process.env.Nodemailer_id,
-    to: email,
+    to: data.email,
     subject: "user verify",
     html: emailHtml,
   };
@@ -137,11 +46,14 @@ module.exports = {
         if (!data) {
           return res.status(400).send("Failed to create the user.");
         } else {
-          const verificationLink = `${process.env.EmailVerify_link}${data._id}`;;
+          const verificationLink = `${process.env.EmailVerify_link}${data._id}`;
+          let bodyData = {email:data.email,name:data.username};
+      //  console.log(bodyData)
           const emailOptions = createVerificationEmailOptions(
             verificationLink,
-            email
+            bodyData
           );
+        //  console.log(emailOptions);
           Mailsend(req, res, emailOptions);
           return res.status(201).send(data);
         }
@@ -171,11 +83,13 @@ module.exports = {
             isVerify: true,
           });
           console.log(data);
-          const verificationLink =`${process.env.EmailVerify_link}${data._id}`;;
+          const verificationLink = `${process.env.EmailVerify_link}${data._id}`;
+          let bodyData = {email:data.email,name:data.username};
           const emailOptions = createVerificationEmailOptions(
             verificationLink,
-            email
+            bodyData
           );
+         console.log(emailOptions);
           Mailsend(req, res, emailOptions);
           const token = jwt.sign(
             { _id: exist._id, email: exist.email, role: exist.role },

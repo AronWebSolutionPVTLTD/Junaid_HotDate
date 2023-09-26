@@ -1,23 +1,23 @@
 const nodemailer = require("nodemailer");
-const Mailsend=(req,res,data)=>{
-    var transporter = nodemailer.createTransport({
-        host: "smtp-relay.brevo.com", // Replace with your SMTP server host
-        port: 465, // Replace with the appropriate port
-        secure: true,
-        auth: {
-          user: process.env.Nodemailer_id,
-          pass: process.env.Nodemailer_pass,
-        },
-      });
-      var mailOptions = data;
-      transporter.sendMail(mailOptions, function (error, result) {
-        if (error) {
-          console.log("Email error sent: " + JSON.stringify(error));
-          return res.status(400).json(error);
-        } else {
-          console.log("Email result sent: " + JSON.stringify(result));
-          return res.status(200).json("send mail successfully");
-        }
-      });
-}
-module.exports=Mailsend;
+const Mailsend = (req, res, data) => {
+  // Create a transporter object with your SMTP server configuration
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: process.env.Nodemailer_id,
+      pass: process.env.Nodemailer_pass,
+    },
+  });
+  var mailOptions = data;
+  // Send the email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Email sending failed:', error);
+      return res.status(500).send({ error: 'Email sending failed' });
+    } else {
+      console.log('Email sent:', info.response);
+      return res.status(200).send({ message: 'Email sent successfully', info });
+    }
+  });
+};
+module.exports = Mailsend;
