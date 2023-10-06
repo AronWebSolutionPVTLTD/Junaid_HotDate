@@ -245,7 +245,7 @@ if(!data.image){
           data.interests = JSON.parse(req.body?.interests);
         }
         if(data?.gender=="male" && !data.image){
-          data.image=`${Backend_Avatar}maleAvatar.jpg`
+          data.image=`${process.env.Backend_Avatar}maleAvatar.jpg`
         }else if(data?.gender=="female" && !data.image){
           data.image=`${process.env.Backend_Avatar}femaleAvatar.png`
         }else{
