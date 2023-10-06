@@ -14,11 +14,7 @@ const UserSchema = new mongoose.Schema(
     DOB: { type: String },
     relocate: { type: Boolean, default: false },
     introduction: { type: String },
-    image: {
-      type: String,
-      default:
-        "https://www.seekpng.com/png/detail/966-9665493_my-profile-icon-blank-profile-image-circle.png",
-    },
+    image:String,
     interests: {
       male_male: [String],
       female_female: [String],
