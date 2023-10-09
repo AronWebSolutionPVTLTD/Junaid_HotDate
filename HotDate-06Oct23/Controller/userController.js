@@ -169,14 +169,16 @@ module.exports = {
         return res.status(400).send("userId is required");
       }
       const exist = await userModel.findOne({ _id: userId });
+      console.log(exist)
       if (!exist) {
         return res.status(404).send("User doesn't exist");
       }
       let image = "";
+      console.log(req.files)
       if (req.files) {
         image = `${process.env.Backend_URL_Image}${req.files.image[0].filename}`;
       } else {
-        image = exist.image;
+        image = "";
       }
       let images = exist.images;
       let videos = exist.videos;
