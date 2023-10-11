@@ -218,8 +218,8 @@ module.exports = {
   async update(req, res) {
     try {
       const { userId } = req.body;
-      console.log(req.body, "Updated Data");
-      console.log(req.body);
+      // console.log(req.body, "----------Updated Data");
+
       if (!userId) {
         return res.status(404).send("required the userId");
       }
@@ -237,7 +237,7 @@ module.exports = {
           { new: true }
         );
         if (req.body.interests) {
-          data.interests = JSON.parse(req.body.interests);
+          data.interests = JSON.parse(req.body?.interests);
         }
         await data.save();
 
@@ -251,10 +251,12 @@ module.exports = {
           },
           { new: true }
         );
-        if (req.body.interests || req.body.couple) {
+        if (req.body.interests) {
           data.interests = JSON.parse(req.body.interests);
-          data.couple = JSON.parse(req.body.couple);
-        }
+      
+        }else if(req.body.couple){
+          data.couple = JSON.parse(req.body.couple) ;
+        }    
         await data.save();
         console.log(data);
         return res.status(200).send(data);
