@@ -300,7 +300,22 @@ module.exports = {
       return res.status(500).send(e);
     }
   },
-};
+  async reviewPost(req, res) {
+    try {
+      const {id}= req.params;
+ const {title,rating,createdBy,desc}=req.body;
+
+ const Review_post = await clubModel.findById(id);
+
+Review_post.reviews.push({title,rating,createdBy,desc})
+
+await Review_post.save();
+res.status(200).send(Review_post)
+    }catch(e){
+return res.status(500).send(e)
+    }
+}
+}
 
 // const PAYTM_MERCHANT_KEY = 'your_merchant_key';
 // const PAYTM_MID = 'your_merchant_id';

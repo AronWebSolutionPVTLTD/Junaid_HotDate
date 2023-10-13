@@ -6,44 +6,49 @@ const Mailsend = require("../helper/mail");
 module.exports = {
   async createtravel(req, res) {
     try {
+      
       console.log(req.body, "jgiojgisdfjfgijsdiogjsdiogiosdfhiodhfi");
       const {
-        min_age_range,
-        max_age_range,
-        locationfrom,
+        age,
+        name,
         locationto,
         userId,
         startDate,
         endDate,
         interested,
         description,
+        image
       } = req.body;
       if (
-        (!min_age_range,
-        !max_age_range,
-        !locationfrom,
+        (!age,
+          !name,
         !locationto,
         !userId,
         !startDate,
         !endDate,
         !interested,
-        !description)
+        !description,
+        !image)
       ) {
         return res.status(400).send("required the missing data");
       }
-      let image = null;
-      if (req.file) {
-        image = process.env.Backend_URL_Image + req.file.filename;
-      }
+      // let image = null;
+      // if (req.file) {
+      //   image = process.env.Backend_URL_Image + req.file.filename;
+      // }
       const userExist = await userModel.findOne({ _id: userId });
       if (!userExist) {
         return res.status(400).send("user not exist");
       }
+      const t2 = JSON.parse(locationto)
+      const t = JSON.parse(interested)
       const data = await travelModel.create({
         ...req.body,
         image: image,
-        userName: userExist.username,
+        locationto:t2,  
+        userName: name,
         userId: userExist._id,
+        interested:t
       });
       if (!data) {
         return res.status(400).send("something went wrong");

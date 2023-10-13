@@ -37,6 +37,11 @@ const ClubSchema = new mongoose.Schema({
   contact:{type:String},
   email:{type:String},
   website:{type:String},
+  reviews:[
+    {title:String,rating:Number,created:{type:Date,default:Date.now()},desc:String,createdBy:{
+      type: mongoose.Schema.Types.ObjectId,ref:'User'
+    }}
+  ]
 }, { timestamps: true });
 
 const Club = mongoose.model("Club", ClubSchema);
