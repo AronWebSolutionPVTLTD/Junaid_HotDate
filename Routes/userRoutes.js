@@ -5,7 +5,7 @@ const {
   verifyToken,
   verifyAdmin,
   verifyUser,
-  verifyModel,
+  verifyModel,verifyTokenActive
 } = require("../helper/middleware");
 
 const userController = require("../Controller/userController");
@@ -13,6 +13,9 @@ const upload = require("../helper/multer");
 console.log(upload);
 router.post("/register", user.signup);
 router.post("/login", user.login);
+router.get("/active/:id",user.userLoggedIN)
+router.get("/active_users",user.activeUsers)
+router.get("/recent_users",user.RecentUsers)
 router.post(
   "/upload_album",
   verifyModel,

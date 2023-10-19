@@ -137,16 +137,77 @@ module.exports = {
           { _id: exist._id, email: exist.email, role: exist.role },
           SECRET_KEY,
           {
-            expiresIn: "30d",
+            expiresIn: "24h",
           }
         );
+        exist.isLogged=true;
+        await exist.save();
         return res.status(200).send({ data: exist, token: token });
-        ``;
       }
     } catch (error) {
       return res.status(400).send(error);
     }
   },
+
+async userLoggedIN(req,res){
+try{
+  const token = req.headers.token;
+  if (!token) return res.status(401).send( {token:token,message:"You are not Authenticated"});
+  jwt.verify(token, process.env.JWT_SECRETKEY, async(err, user) => {
+    if (err){
+      await userModel.findByIdAndUpdate(req.params.id,{isLogged:false});
+       return res.status(401).send( "Invalid Token! or Token is expired");
+    }else{
+      req.user = user;
+      const findUser_Status = await userModel.findById(req.user._id);
+if(findUser_Status.isLogged){
+  return res.status(200).send({message:"User is active"})
+}else{
+  return res.status(403).send({message:"You have to login first!"})
+}
+    }});
+
+}catch(err){
+  console.log(err,"NOW")
+  return res.status(500).send(err)
+}
+},
+
+  async activeUsers(req,res){
+try{
+  console.log(req.user)
+const findUsers = await userModel.find({isLogged:true});
+if(findUsers.length!==0){
+  res.status(200).send({success:true,users:findUsers})
+}else{
+  res.status(200).send({message:'No user found!'})
+}
+}catch(err){
+  return res.status(500).send(err)
+}
+},
+
+  async RecentUsers(req,res){
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentUsers = await userModel
+        .find({ createdAt: { $gte: thirtyDaysAgo } })
+        .sort({ createdAt: -1 }); 
+  
+      if (recentUsers.length !== 0) {
+        res.status(200).send({ success: true, users: recentUsers });
+      } else {
+        res.status(200).send({ message: 'No recent users found!' });
+      }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send(err);
+    }
+},
+  
+
   async findOne(req, res) {
     try {
       const { id } = req.params;
@@ -246,16 +307,7 @@ if(!data.image){
         if (req.body.interests) {
           data.interests = JSON.parse(req.body?.interests);
         }
-        if(data?.gender=="male" && !data.image){
-          data.image=`${process.env.Backend_Avatar}maleAvatar.jpg`
-        }else if(data?.gender=="female" && !data.image){
-          data.image=`${process.env.Backend_Avatar}femaleAvatar.png`
-        }else{
-          if(!data.image){
-               data.image=`${process.env.Backend_Avatar}maleAvatar.jpg`
-          }
        
-        }
         await data.save();
         return res.status(200).send(data);
       } else if (exist.profile_type == "couple") {

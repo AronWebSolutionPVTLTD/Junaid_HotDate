@@ -119,7 +119,7 @@ const UserSchema = new mongoose.Schema(
         Drugs:{type:String},
         Language:{type:String}
       },
-    },
+    },isLogged:{type:Boolean,default:false}
   },
   {
     timestamps: true,

@@ -116,7 +116,7 @@ module.exports = {
   },
   async update_club(req, res) {
     const { clubId } = req.params;
-    const { dltImage, dltVideo } = req.body;
+    const { dltImage, dltVideo ,location} = req.body;
     try {
       if (!clubId) {
         return res.status(400).send("clubId is required");
@@ -153,6 +153,7 @@ module.exports = {
    req.body?.videos.map((el)=>video.push(el))}else{
     video.push(req.body?.video)
    }
+   const t2 = JSON.parse(location)
       const data = await clubModel.findByIdAndUpdate(
         { _id: exist._id },
         {
@@ -160,6 +161,7 @@ module.exports = {
           mainImage: mainImage,
           image: image,
           video: video,
+          location:t2
         },
         { new: true }
       );
