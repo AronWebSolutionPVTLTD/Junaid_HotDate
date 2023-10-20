@@ -7,7 +7,8 @@ const {createFriendRequest,
     outGoingRequests,
     cancelPendingRequest,
     acceptPendingRequest,
-    getAllFriends,} = require("../Controller/friend")
+    getAllFriends,
+    checkFriendRequest,} = require("../Controller/friend")
 
 
 router.post("/add_friend/:id",verifyToken,createFriendRequest);
@@ -16,6 +17,7 @@ router.get('/outgoing-requests',verifyToken,outGoingRequests);
 router.patch('/cancel-pending-request/:id',verifyToken,cancelPendingRequest);
 router.patch('/accept-pending-request/:id',verifyToken, acceptPendingRequest);
 router.get('/all-friends',verifyToken, getAllFriends);
+router.get('/check_req/:id',verifyToken, checkFriendRequest);
 
 
 module.exports=router;

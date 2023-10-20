@@ -29,7 +29,19 @@ const user = req.user;
   return res.status(200).send(friendRequest);
 };
 
+const checkFriendRequest =async (req, res) => {
+  const { id } = req.params;
+  const user = req.user; // Assuming you have authenticated the user
 
+  // Check if there is a pending friend request from the user to the specified userId
+  const existingRequest = await FriendRequest.findOne({ from: user._id, to: id, status: 'pending' });
+
+  if (existingRequest) {
+    return res.status(200).json({ status: 'pending' });
+  }
+
+  return res.status(200).json({ status: 'not_pending' });
+}
 
 const pendingFriendRequests = async (req,res) => {
   const friendRequest = await FriendRequest.find({ to: req.user._id, status: 'pending' })
@@ -90,5 +102,5 @@ module.exports = {
   outGoingRequests,
   cancelPendingRequest,
   acceptPendingRequest,
-  getAllFriends,
+  getAllFriends,checkFriendRequest
 };
