@@ -37,7 +37,7 @@ const checkFriendRequest =async (req, res) => {
   const existingRequest = await FriendRequest.findOne({ from: user._id, to: id, status: 'pending' });
 
   if (existingRequest) {
-    return res.status(200).json({ status: 'pending' });
+    return res.status(200).json({ status: 'pending',existingRequest });
   }
 
   return res.status(200).json({ status: 'not_pending' });
