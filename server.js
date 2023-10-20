@@ -17,9 +17,10 @@ const model = require("./Routes/model")
 const message = require("./Routes/message")
 const travel = require("./Routes/travel")
 const faq = require("./Routes/faq")
+const friends = require("./Routes/friend")
 app.use(express.json())
 app.use(cors());
-app.use("/api", userroutes, model, event, travel, clubroutes, message,faq);
+app.use("/api", userroutes, model, event, travel, clubroutes, message,faq,friends);
 db();
 app.use(express.static(path.join(__dirname)));
 
