@@ -365,8 +365,9 @@ if(!data.image){
   async logout(req, res) {
     try {
       const data = await userModel.findOneAndUpdate(
-        { _id: req.user._id },
-        { token: null }
+        { _id: req.params.id },
+        { token: null,  isLogged:false },{new:true}
+      
       );
       if (!data) {
         return res.status(404).send({ message: "User not found" });

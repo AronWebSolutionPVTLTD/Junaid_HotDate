@@ -47,7 +47,7 @@ router.put(
 );
 router.delete("/delete_user/:id", verifyAdmin, user.delete_user);
 router.get("/search_user", user.search_user);
-router.post("/logout", verifyUser, user.logout);
+router.post("/logout/:id", user.logout);
 router.put("/changePassword",verifyToken, user.changePassword);
 router.post("/contactUs", user.contactUs);
 router.get("/userdetail/:id", user.userdetail);

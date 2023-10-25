@@ -27,5 +27,7 @@ router.get("/search_club",club.search_club)
 router.get("/getClub/:id",club.getClub)
 router.put("/bookingClub/:cludId",club.bookingClub)
 router.put("/reviewPost/:id",club.reviewPost)
+router.patch("/edit-review/:id",club.editReview)
+router.put("/delete-review/:id",club.deleteReview)
 
 module.exports = router;

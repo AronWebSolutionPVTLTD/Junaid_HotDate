@@ -178,7 +178,14 @@ module.exports = {
   async search_club(req, res) {
     try {
       const { q } = req.query;
-      const get = await clubModel.find({});
+      const get = await clubModel.find({}).populate({
+        path: "reviews",
+        populate: {
+          path: "createdBy",
+          model:"User",
+          select: "image"
+        }
+      });
       console.log(get);
       if (q) {
         let data = await clubModel.find({
@@ -238,7 +245,15 @@ module.exports = {
       const { id } = req.params;
       const data = await clubModel
         .findOne({ _id: id })
-        .populate("customer ownerId", "image username");
+        .populate("customer ownerId", "image username")
+        .populate({
+          path: "reviews",
+          populate: {
+            path: "createdBy",
+            model: "User",
+            select: "image"
+          }
+        })
       if (!data) {
         return res.status(400).send("something went wrong");
       } else {
@@ -316,8 +331,39 @@ res.status(200).send(Review_post)
     }catch(e){
 return res.status(500).send(e)
     }
+},
+async editReview(req, res) {
+  try {
+    const {id}= req.params;
+const {reviewId,rating,desc}=req.body;
+const filter = {
+_id: id,
+"reviews._id": reviewId
+};
+const update = {
+$set: {
+  "reviews.$.rating": rating,
+  "reviews.$.desc": desc
 }
+};
+await clubModel.updateOne(filter,update,{new:true});
+res.status(200).send("Comment is updated successfully")
+  }catch(e){
+return res.status(500).send(e)
+  }
+},
+async deleteReview(req, res) {
+  try {
+    const {id}= req.params;
+const {reviewId}=req.body;
+await clubModel.updateOne({_id:id},{$pull:{reviews:{_id:reviewId}}},{new:true});
+res.status(200).send("Deleted successfully");
+  }catch(e){
+return res.status(500).send(e)
+  }
+},
 }
+
 
 // const PAYTM_MERCHANT_KEY = 'your_merchant_key';
 // const PAYTM_MID = 'your_merchant_id';
