@@ -259,7 +259,7 @@ console.log(req.files,"ALL FILES")
 
       let result = await eventModel.findOneAndUpdate(
         { _id: eventId },
-        { $pull: { participants: { user: userId, status: "Pending" } } },
+        { $pull: { participants: { user: userId } } },
         { new: true })
 
         if ( !result || result == null) {
