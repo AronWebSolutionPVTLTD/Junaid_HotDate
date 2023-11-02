@@ -115,12 +115,14 @@ module.exports = {
     }
   },
   async update_club(req, res) {
+    console.log("r12t")
     const { clubId } = req.params;
     const { dltImage, dltVideo ,location} = req.body;
     try {
       if (!clubId) {
         return res.status(400).send("clubId is required");
       }
+    
       const exist = await clubModel.findOne({ _id: clubId });
       if (!exist) {
         return res.status(404).send("Club doesn't exist");
@@ -145,6 +147,7 @@ module.exports = {
           video.push(`${process.env.Backend_URL_Image}${video.filename}`);
         }
       }
+    console.log(req.body?.image)
       if(Array.isArray(req.body?.image)){
    req.body?.image.map((el)=>image.push(el))}else{
     image.push(req.body?.image)
@@ -153,7 +156,9 @@ module.exports = {
    req.body?.videos.map((el)=>video.push(el))}else{
     video.push(req.body?.video)
    }
+  
    const t2 = JSON.parse(location)
+   console.log("hi")
       const data = await clubModel.findByIdAndUpdate(
         { _id: exist._id },
         {

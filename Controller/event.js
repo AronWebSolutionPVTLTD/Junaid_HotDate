@@ -167,6 +167,7 @@ console.log(req.files,"ALL FILES")
       if (!eventId) {
         return res.status(404).send("required the eventId");
       }
+   
       const exist = await eventModel.findOne({ _id: eventId });
       if (!exist) {
         return res.status(404).send("event not found");
@@ -259,7 +260,7 @@ console.log(req.files,"ALL FILES")
 
       let result = await eventModel.findOneAndUpdate(
         { _id: eventId },
-        { $pull: { participants: { user: userId, status: "Pending" } } },
+        { $pull: { participants: { user: userId } } },
         { new: true })
 
         if ( !result || result == null) {

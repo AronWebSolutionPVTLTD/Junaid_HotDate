@@ -1,6 +1,15 @@
-const express = require("express");
+const express = require("express")
+const { connect } = require('getstream');
+const StreamChat = require('stream-chat').StreamChat;
 const user = require("../Controller/userController");
 const router = express.Router();
+
+const apiKey = '5npkzfpcxuh8';
+const apiSecret = '5x4psrh4mya9jmsxux7kxagf9wyz32jb4qmh8nbktfj7db3x7mb82uxndychggma';
+const appId = '1267706';
+
+
+
 const {
   verifyToken,
   verifyAdmin,
@@ -65,4 +74,18 @@ router.put(
 router.post("/addwallet/:id", verifyUser, user.addwallet);
 router.get("/getfavModel/:userId", user.getfavModel);
 router.post("/favModel/:modelId", verifyToken, user.favModel);
+router.post('/auth/getstream', async(req, res) => {
+  const { userId } = req.body;
+  const serverClient = connect(apiKey, apiSecret, appId);
+  const client = StreamChat.getInstance(apiKey, apiSecret);
+  const { users } = await client.queryUsers({ id: userId });
+  if(!users.length){
+    const userToken = serverClient.createUserToken(userId);
+    return res.json({ token: userToken })
+  }else{
+    const userToken = serverClient.createUserToken(users[0].id);
+    return res.json({ token: userToken })
+  }
+});
+
 module.exports = router;
