@@ -21,7 +21,7 @@ const faq = require("./Routes/faq")
 const friends = require("./Routes/friend")
 app.use(express.json())
 var corsOptions = {
-  origin: ['http://localhost:3000','http://localhost:3001'],
+  origin: ['http://localhost:3000','http://localhost:3001',"https://hot-date.vercel.app"],
   credentials: true };
 
 app.use(cors(corsOptions));
