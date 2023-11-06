@@ -137,7 +137,7 @@ module.exports = {
           { _id: exist._id, email: exist.email, role: exist.role },
           SECRET_KEY,
           {
-            expiresIn: "1min",
+            expiresIn: "24h",
           }
         );
         exist.isLogged=true;
