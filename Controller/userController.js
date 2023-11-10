@@ -137,7 +137,46 @@ module.exports = {
           { _id: exist._id, email: exist.email, role: exist.role },
           SECRET_KEY,
           {
-            expiresIn: "24h",
+            expiresIn: "10d",
+          }
+        );
+        exist.isLogged=true;
+        await exist.save();
+        const options = {
+          expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        };
+      
+        return res.status(200).cookie("token", token, options).send({ data: exist, token: token });
+      }
+    } catch (error) {
+      return res.status(400).send(error);
+    }
+  },
+  async login4(req, res) {
+    const { email, password } = req.body;
+    try {
+      if (!email || !password) {
+        return res.status(400).send("Please Provide Required Information");
+      }
+      const exist = await userModel.findOne({ email });
+      if (!exist) {
+        return res.status(400).send("User doesn't exist");
+      }
+      if (exist.isVerify == false) {
+        return res.status(400).send("Email is not verified");
+      }
+      const match = await bcrypt.compare(password, exist.password);
+      if (!match) {
+        return res.status(400).send("Your password is wrong");
+      } else {
+        const token = jwt.sign(
+          { _id: exist._id, email: exist.email, role: exist.role },
+          SECRET_KEY,
+          {
+            expiresIn: "365d",
           }
         );
         exist.isLogged=true;
