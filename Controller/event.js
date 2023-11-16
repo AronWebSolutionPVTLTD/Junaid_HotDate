@@ -124,7 +124,7 @@ console.log(req.files,"ALL FILES")
   async find(req, res) {
     try {
       const { q } = req.query;
-      const data = await eventModel.find();
+      const data = await eventModel.find().populate("userId", "image username");
       const total = await eventModel.count();
       console.log(total, "total");
       if (q) {
@@ -134,7 +134,7 @@ console.log(req.files,"ALL FILES")
             { type: { $regex: q, $options: "i" } },
             { location: { $regex: q, $options: "i" } },
           ],
-        });
+        }).populate("userId", "image username");;
         console.log(q, result);
 
         return res.status(200).send({ data: result, total: total });
@@ -150,7 +150,7 @@ console.log(req.files,"ALL FILES")
       const { eventId } = req.params;
       const data = await eventModel
         .findOne({ _id: eventId })
-        .populate("userId", " image username");
+        .populate("userId", "image username");
       if (!data) {
         return res.status(400).send("something went wrong");
       } else {
